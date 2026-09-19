@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국어 문법 퀘스트 - 말하면서 배우는 교실</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@400;700&display=swap');
+        
+        :root {
+            --primary: #6366F1;
+            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;
+            --accent: #F43F5E;
+            --success: #10B981;
+        }
+
+        body {
+            font-family: 'Jua', 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(135deg, #EEF2FF 0%, #FCE7F3 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 900px;
+            background: var(--card-bg);
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 4px solid #FFFFFF;
+            position: relative;
+        }
+
+        /* 상단 상태 바 */
+        .status-bar {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stage-badge {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-stage-select {
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+        }
+
+        .btn-stage-select:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .progress-panel {
+            padding: 9px 20px 7px;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .progress-top {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 8px; font-size: 0.78rem; color: #475569; margin-bottom: 5px;
+        }
+        .progress-title { font-weight: bold; color: #334155; }
+        .progress-count { color: #6366F1; font-weight: bold; }
+        .progress-track { height: 9px; background: #E2E8F0; border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #6366F1 0%, #A855F7 100%); border-radius: 99px; transition: width 0.35s ease; }
+        .progress-stats { display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.72rem; color: #64748B; }
+        .progress-stats strong { color: #334155; }
+        .achievement-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 10px; }
+        .achievement-card { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 7px 5px; text-align: center; }
+        .achievement-number { font-size: 1.05rem; font-weight: bold; color: #4F46E5; }
+        .achievement-label { font-size: 0.68rem; color: #64748B; margin-top: 1px; }
+
+        /* 캐릭터 & 말풍선 영역 */
+        .character-section {
+            background: linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 100%);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px dashed #E2E8F0;
+        }
+
+        .mascot-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: top;
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            background: #fff;
+        }
+
+        .speech-bubble {
+            background: #FFFFFF;
+            padding: 8px 12px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            font-size: 0.85rem;
+            line-height: 1.35;
+            position: relative;
+            flex-grow: 1;
+            border: 2px solid #E0E7FF;
+        }
+
+        /* 미션 콘텐츠 영역 */
+        .content-area {
+            padding: 10px 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .hint-box {
+            background: #EEF2FF;
+            color: #3730A3;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            border: 1px solid #C7D2FE;
+            line-height: 1.35;
+        }
+
+        .hint-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .question-card {
+            background: #F8FAFC;
+            padding: 10px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            line-height: 1.4;
+            border: 2px solid #E2E8F0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* 이미지 컨테이너 대폭 확대 (높이 200px, object-fit: contain) */
+        .visual-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px 0;
+            background: #F8FAFC;
+            border-radius: 16px;
+            padding: 8px;
+            border: 3px solid #E2E8F0;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .visual-container img {
+            width: 100%;
+            height: 190px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #FFFFFF;
+        }
+
+        .target-word {
+            color: var(--primary);
+            background: #EEF2FF;
+            padding: 2px 6px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: #64748B;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        textarea {
+            width: 100%;
+            height: 60px;
+            padding: 10px;
+            border: 2px solid #CBD5E1;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+            box-sizing: border-box;
+            background: #FAFAFA;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .feedback-box {
+            padding: 10px;
+            border-radius: 12px;
+            background: #ECFDF5;
+            color: #065F46;
+            border: 2px solid #A7F3D0;
+            display: none;
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        /* 하단 액션 버튼 영역 */
+        .action-area {
+            padding: 10px 20px 14px 20px;
+            background: #FFFFFF;
+            border-top: 2px solid #F1F5F9;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        }
+
+        .btn-record {
+            background: #FEE2E2;
+            color: #DC2626;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 2px solid #FECACA;
+        }
+
+        .btn-record.recording {
+            background: #DC2626;
+            color: white;
+            animation: pulseRecord 1s infinite;
+        }
+
+        .btn-submit {
+            background: var(--primary-gradient);
+            color: white;
+            flex: 1.4;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.96);
+            box-shadow: none;
+        }
+
+        /* 팝업 모달 스타일 */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .modal-card {
+            background: white;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 3px solid #E0E7FF;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .modal-subtitle {
+            font-size: 0.85rem;
+            color: #64748B;
+            margin-bottom: 12px;
+        }
+
+        .report-scroll-area {
+            flex-grow: 1;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 10px;
+            background: #F8FAFC;
+            text-align: left;
+            margin-bottom: 14px;
+        }
+
+        .report-item {
+            background: #FFFFFF;
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #E2E8F0;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+
+        .report-item-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .stage-select-btn {
+            width: 100%;
+            background: #FFFFFF;
+            border: 2px solid #C7D2FE;
+            color: #3730A3;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: none;
+        }
+
+        .stage-select-btn:hover {
+            background: #EEF2FF;
+            border-color: var(--primary);
+        }
+
+        .btn-next-stage {
+            background: var(--primary-gradient);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+
+        @keyframes pulseRecord {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- 스테이지 클리어 피드백 팝업 모달 -->
+    <div class="modal-overlay" id="clear-modal">
+        <div class="modal-card">
+            <div style="font-size: 2rem; margin-bottom: 2px;">🏆</div>
+            <div class="modal-title" id="modal-stage-title">STAGE 1 클리어!</div>
+            <div class="modal-subtitle">이 화면을 캡처해서 선생님께 보내주세요! 📸</div>
+            
+            <div class="report-scroll-area" id="modal-report-list"></div>
+
+            <button class="btn-next-stage" onclick="proceedNextStage()">
+                다음 단계로 이동하기 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- 단계 선택 팝업 모달 -->
+    <div class="modal-overlay" id="stage-select-modal">
+        <div class="modal-card">
+            <div style="font-size: 2rem; margin-bottom: 2px;">🗺️</div>
+            <div class="modal-title">단계 선택하기</div>
+            <div class="modal-subtitle">복습하고 싶은 스테이지를 선택하세요!</div>
+            
+            <div class="report-scroll-area" id="stage-select-list"></div>
+
+            <button class="btn-next-stage" onclick="closeStageSelect()" style="background: #94A3B8; box-shadow: none;">
+                닫기 ❌
+            </button>
+        </div>
+    </div>
+
+    <!-- 상단 상태 바 -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span id="stage-indicator" class="stage-badge">STAGE 1 (시작 인사)</span>
+            <button class="btn-stage-select" onclick="openStageSelect()">단계 선택 🗺️</button>
+        </div>
+        <span id="score">⭐ 0점</span>
+    </div>
+
+    <div class="progress-panel">
+        <div class="progress-top">
+            <span id="progress-title" class="progress-title">스테이지 진행</span>
+            <span id="progress-count" class="progress-count">0 / 0</span>
+        </div>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+        <div class="progress-stats">
+            <span>클리어 <strong id="clear-count">0</strong></span>
+            <span>재도전 대기 <strong id="wrong-count">0</strong></span>
+            <span>이번 스테이지 <strong id="stage-score">0점</strong></span>
+        </div>
+    </div>
+
+    <!-- 캐릭터 & 말풍선 -->
+    <div class="character-section">
+        <img src="hint.png" alt="마스코트" class="mascot-img" id="mascot-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\'><circle cx=\'30\' cy=\'30\' r=\'30\' fill=\'%236366F1\'/><text x=\'30\' y=\'38\' font-size=\'24\' text-anchor=\'middle\' fill=\'white\'>👦</text></svg>'">
+        <div class="speech-bubble" id="mascot-speech">
+            안녕하세요? 처음 뵙겠습니다.
+        </div>
+    </div>
+
+    <!-- 미션 콘텐츠 -->
+    <div class="content-area">
+        <div class="hint-box">
+            <div class="hint-icon">💡</div>
+            <div id="hint-text"><b>[보기]</b> 인사를 나누어 보세요.</div>
+        </div>
+
+        <div class="question-card" id="question-text">
+            인사해 보세요.<br>
+            (제시어: <span class='target-word'>안녕하세요, 반갑습니다</span>)
+        </div>
+
+        <div id="visual-area"></div>
+
+        <div class="input-group">
+            <div class="input-label">
+              <span>🎤 음성 녹음 또는 직접 입력</span>
+              <span id="mic-status" style="color: #4F46E5; font-weight: bold;">대기 중</span>
+            </div>
+            <textarea id="user-input" placeholder="주변 소음을 줄이고 또렷하게 말씀하세요! 충분히 생각한 뒤 [정답 확인]을 누르세요."></textarea>
+        </div>
+
+        <div class="feedback-box" id="feedback-area">
+            🎉 <b>정답 확인 완료! (+100점)</b><br>
+            💡 <b>입력 내용 확인 후 다음으로 진행합니다.</b>
+        </div>
+    </div>
+
+    <!-- 하단 액션 버튼 -->
+    <div class="action-area">
+        <button class="btn-record" id="record-btn" onclick="toggleRecord()">
+            🎤 음성 녹음 시작
+        </button>
+        <button class="btn-submit" onclick="submitAnswer()">
+            정답 확인 ✨
+        </button>
+    </div>
+</div>
+
+<script>
+    function generateBTemplate(count) {
+        const templates = [
+            { q: "이 가방은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)", required: ["가벼워요", ["가벼워", "가볍"]] },
+            { q: "날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)", required: ["추워요", ["추워", "춥"]] },
+            { q: "이 책은 어때요?<br>(제시어: <span class='target-word'>어렵다</span>)", required: ["어려워요", ["어려워", "어렵"]] },
+            { q: "한국 음식이 어때요?<br>(제시어: <span class='target-word'>맵다</span>)", required: ["매워요", ["매워", "맵"]] },
+            { q: "이 옷은 어때요?<br>(제시어: <span class='target-word'>예쁘다</span>)", required: ["예뻐요", ["예뻐", "예쁘"]] },
+            { q: "이 신발은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)", required: ["가벼워요", ["가벼워", "가볍"]] },
+            { q: "오늘 날씨가 어때요?<br>(제시어: <span class='target-word'>덥다</span>)", required: ["더워요", ["더워", "덥"]] },
+            { q: "이 음식은 어때요?<br>(제시어: <span class='target-word'>맛있다</span>)", required: ["맛있어요", ["맛있어", "맛있"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>문, 닫다</span>)", required: ["문을", ["닫아요", "닫아"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>친구 손, 잡다</span>)", required: ["친구 손을", ["잡아요", "잡아"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>사진, 찍다</span>)", required: ["사진을", ["찍어요", "찍어"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>밥, 먹다</span>)", required: ["밥을", ["먹어요", "먹어"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>물, 마시다</span>)", required: ["물을", ["마셔요", "마셔"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)", required: ["책을", ["읽어요", "읽어"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>한국어, 공부하다</span>)", required: ["한국어를", ["공부해요", "공부해"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>친구, 만나다</span>)", required: ["친구를", ["만나요", "만나"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악을", ["들어요", "들어"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>사진, 보다</span>)", required: ["사진을", ["봐요", "봐"]] },
+            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>문, 열다</span>)", required: ["문을", ["열어요", "열어"]] }
+        ];
+        return templates.slice(0, count);
+    }
+
+    const stages = [
+        {
+            stage: "STAGE 1",
+            grammarTitle: "자기소개 및 직업 (이에요/예요)",
+            mascotSpeech: "자신을 자연스럽게 소개해보세요!",
+            hint: "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 '입니다' 사용 금지)",
+            questions: [
+                { q: "자기소개<br>(제시어: <span class='target-word'>네팔, 학생</span>)", required: ["네팔", "학생"] },
+                { q: "자기소개<br>(제시어: <span class='target-word'>베트남, 회사원</span>)", required: ["베트남", "회사원"] },
+                { q: "자기소개<br>(제시어: <span class='target-word'>미국, 대학생</span>)", required: ["미국", "대학생"] },
+                { q: "자기소개<br>(제시어: <span class='target-word'>일본, 경찰</span>)", required: ["일본", "경찰"] },
+                { q: "자기소개<br>(제시어: <span class='target-word'>우즈베키스탄, 선생님</span>)", required: ["우즈베키스탄", "선생님"] }
+            ]
+        },
+        {
+            stage: "STAGE 2",
+            grammarTitle: "긍정/부정 대답 및 지시사 (이/그/저)",
+            mascotSpeech: "선생님의 질문에 올바른 지시사를 써서 대답해봐요!",
+            hint: "<b>[보기]</b> 네, 이것은/그것은 N이에요/예요 또는 아니요, 저것은/그것은 N이/가 아니에요",
+            questions: [
+                { q: "선생님: '저것은 컴퓨터예요?'<br>(제시어: <span class='target-word'>아니요, 칠판</span>)", required: ["아니요", "저것은", "칠판"], type: "negative", qDemo: "저것은" },
+                { q: "선생님: '이것은 책상이에요?'<br>(제시어: <span class='target-word'>네, 책상</span>)", required: ["네", "책상"], type: "positive", qDemo: "이것은" },
+                { q: "선생님: '그것은 연필이에요?'<br>(제시어: <span class='target-word'>아니요, 볼펜</span>)", required: ["아니요", "이것은", "볼펜"], type: "negative", qDemo: "그것은" },
+                { q: "선생님: '저것은 공책이에요?'<br>(제시어: <span class='target-word'>네, 공책</span>)", required: ["네", "저것은", "공책"], type: "positive", qDemo: "저것은" },
+                { q: "선생님: '이것은 지우개예요?'<br>(제시어: <span class='target-word'>아니요, 필통</span>)", required: ["아니요", ["이것은", "그것은"], "필통"], type: "negative", qDemo: "이것은" },
+                { q: "선생님: '그것은 가방이에요?'<br>(제시어: <span class='target-word'>네, 가방</span>)", required: ["네", "이것은", "가방"], type: "positive", qDemo: "그것은" },
+                { q: "선생님: '저것은 시계예요?'<br>(제시어: <span class='target-word'>아니요, 달력</span>)", required: ["아니요", "저것은", "달력"], type: "negative", qDemo: "저것은" },
+                { q: "선생님: '이것은 창문이에요?'<br>(제시어: <span class='target-word'>네, 창문</span>)", required: ["네", "이것은", "창문"], type: "positive", qDemo: "이것은" }
+            ]
+        },
+        {
+            stage: "STAGE 3",
+            grammarTitle: "일상 행동 표현 (-을/를 V-아요/어요)",
+            mascotSpeech: "지금 무엇을 해요?",
+            hint: "<b>[보기]</b> N을/를 V-아요/어요 (받침 O: 을 / 받침 X:를 - 받침 있는/없는 명사 골고루 혼합)",
+            questions: [
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>한국어, 배우다</span>)", required: ["한국어를", "배워"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>커피, 마시다</span>)", required: ["커피를", "마셔"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)", required: ["책", ["읽어", "읽어요"]] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악을", "들어"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>사과, 사다</span>)", required: ["사과를", "사"], forbidden: ["사어요"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>냉면, 먹다</span>)", required: ["냉면을", "먹어"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>영화, 보다</span>)", required: ["영화를", "봐"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>숙제, 하다</span>)", required: ["숙제를", "해"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>축구, 하다</span>)", required: ["축구를", "해"] },
+                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>청소, 하다</span>)", required: ["청소를", "해"] }
+            ]
+        },
+        {
+            stage: "STAGE 3.5",
+            grammarTitle: "1~3단계 종합 복습 챌린지",
+            mascotSpeech: "개연성을 가진 대화를 이어가며 종합 회화를 연습해봐요!",
+            hint: "<b>[보기]</b> 자기소개 + 사물 부정/긍정 + 일상 행동 연결 회화",
+            questions: [
+                { q: "자기소개를 해보세요.<br>(제시어: <span class='target-word'>미국 사람, 대학생</span>)", required: ["미국", "대학생"] },
+                { q: "한국 생활을 말해보세요.<br>(제시어: <span class='target-word'>한국, 한국어 공부하다</span>)", required: ["한국", "공부해"] },
+                { q: "선생님: '저것은 텔레비전이에요?'<br>(제시어: <span class='target-word'>아니요, 컴퓨터</span>)", required: ["아니요", "컴퓨터"] },
+                { q: "선생님: '도서관에서 뭐해요?'<br>(제시어: <span class='target-word'>책, 빌리다</span>)", required: ["책", ["빌려", "빌려요"]] }
+            ]
+        },
+        {
+            stage: "STAGE 4",
+            grammarTitle: "'ㅂ' 불규칙 및 형용사/동사",
+            mascotSpeech: "상태(형용사)와 행동(동사)의 알맞은 조사를 써서 표현해봐요!",
+            hint: "<b>[보기]</b> 형용사(가벼워요, 추워요)는 '이/가' 사용, 타동사(잡다➔잡아요)는 '을/를' 사용",
+            questions: generateBTemplate(19)
+        },
+        {
+            stage: "STAGE 5",
+            grammarTitle: "장소 조사 (에 / 에서) 및 일상 묻고 답하기",
+            mascotSpeech: "장소와 일상 활동을 정확한 조사로 표현해봐요!",
+            hint: "<b>[보기]</b> 장소에(이동), 장소에서(행동)",
+            questions: [
+                { q: "책을 빌리러 어디에 가나요?<br>(제시어: <span class='target-word'>도서관, 가다</span>)", required: ["도서관", "가"], particleType: "에" },
+                { q: "책을 사러 어디에 가나요?<br>(제시어: <span class='target-word'>서점, 가다</span>)", required: ["서점", "가"], particleType: "에" },
+                { q: "점심을 먹으러 어디에 가나요?<br>(제시어: <span class='target-word'>식당, 가다</span>)", required: ["식당", "가"], particleType: "에" },
+                { q: "<b>어디에서 공부를 해요?</b><br>(제시어: <span class='target-word'>교실, 공부하다</span>)", required: ["교실", ["공부해요", "공부를 해요", "공부해"]], particleType: "에서" },
+                { q: "<b>어디에서 운동을 해요?</b><br>(제시어: <span class='target-word'>운동장, 운동하다</span>)", required: ["운동장", ["운동을 해요", "운동해요", "운동해"]], particleType: "에서" },
+                { q: "<b>옷을 어디에서 사요?</b><br>(제시어: <span class='target-word'>백화점, 사다</span>)", required: ["백화점", ["사요", "사"]], particleType: "에서" },
+                { q: "<b>카페에서 무엇을 해요?</b><br>(제시어: <span class='target-word'>커피, 마시다</span>)", required: ["커피", ["마셔요", "마셔", "마십니다"]], particleType: "에서" },
+                { q: "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>영화관, 영화, 보다</span>)", required: ["영화관", "영화", ["봐요", "봐", "봅니다"]], particleType: "에서" },
+                { q: "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>집, 잠, 자다</span>)", required: ["집", ["잠", "자다", "자", "자요"]], particleType: "에서" }
+            ]
+        },
+        {
+            stage: "STAGE 6",
+            grammarTitle: "위치 표현 (N에 있어요)",
+            mascotSpeech: "그림을 보고 사물이 어디에 있는지 위치어와 조사를 정확하게 말해봐요!",
+            hint: "<b>[보기]</b> 이미지를 보고 위치어와 <b>에 있어요</b>를 쓰세요. (제시어 없음)",
+            questions: [
+                { q: "<b>책은 어디에 있어요?</b>", required: [["책은", "최근", "책이"], "책상", "위", "에"], img: "classroom.jpg" },
+                { q: "<b>에어컨은 어디에 있어요?</b>", required: ["칠판", ["위", "옆", "상단"], "에"], img: "classroom.jpg" },
+                { q: "<b>나무가 어디에 있어요?</b>", required: ["창", "밖", "에"], img: "classroom.jpg" },
+                { q: "<b>고양이가 어디에 있어요?</b>", required: ["의자", ["아래", "밑"], "에"], img: "image_4eb870.jpg" },
+                { q: "<b>휴대폰이 어디에 있어요?</b>", required: ["가방", "안", "에"], img: "image_4eb8eb.jpg" },
+                { 
+                    q: "<b>지갑이 어디에 있어요?</b>", 
+                    required: [["가방과", "가방이랑", "가방하고"], "사이"], 
+                    forbidden: ["사이 에 있어요"],
+                    img: "image_4eb966.jpg" 
+                },
+                { q: "<b>친구가 어디에 있어요?</b>", required: ["문", "앞", "에"], img: "image_4ebc53.jpg" },
+                { q: "<b>우유가 어디에 있어요?</b>", required: ["냉장고", "안", "에"], img: "image_4ebccb.jpg" }
+            ]
+        },
+        {
+            stage: "STAGE 7",
+            grammarTitle: "시계 읽기, 가격 묻기 및 종합 챌린지",
+            mascotSpeech: "시계를 읽고, 가격과 위치, 생일을 자유롭게 대답해봐요!",
+            hint: "<b>[보기]</b> 이미지의 시각과 상황을 보고 올바른 문장으로 대답하세요. (6월은 '유월', 10월은 '시월' 주의!)",
+            questions: [
+                { q: "<b>생일이 언제예요?</b>", required: ["월", "일"], type: "birthday" },
+                { q: "<b>한국어 수업은 몇 시부터 몇 시까지 해요?</b>", required: ["아홉", "시", "십", "분", "한", "시", "부터", "까지"], img: "clock_class.png" },
+                { q: "<b>저녁을 언제 먹어요?</b><br>(제시어: <span class='target-word'>오후, 저녁을 먹다</span>)", required: [["오후 7시에", "오후 7시", "오후 일곱 시에", "오후 일곱 시"], ["저녁을 먹어요", "저녁을 먹어", "저녁을 먹", "밥을 먹어요", "밥을 먹어", "밥을 먹"]], img: "clock_dinner.png" },
+                { q: "<b>오늘 저녁에 약속이 있어요?</b><br>(제시어: <span class='target-word'>오후, 친구, 만나다</span>)", required: ["오후", "친구", "만나"], img: "clock_apt.png" },
+                { q: "<b>냉면이 얼마예요?</b><br>(제시어: <span class='target-word'>냉면이, 단위 N, 예요/이에요</span>)", required: [["만오천", "15000"], "원"], img: "image_5e96a4.png" },
+                { q: "<b>김밥이 한 줄에 얼마예요?</b><br>(제시어: <span class='target-word'>김밥이, 한 줄에, 예요/이에요</span>)", required: [["삼천오백", "삼천 오백", "3500"], "원"], img: "image_5e96a4.png" },
+                { 
+                    q: "<b>라면과 떡볶이를 먹고 싶어요. 얼마예요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와/과, 원이에요</span>)", 
+                    required: [
+                        ["라면", "떡볶이"],
+                        ["만원", "만 원", "10000", "일만"]
+                    ], 
+                    img: "image_5e96a4.png" 
+                },
+                { q: "<b>병원은 어디에 있어요?</b>", required: [["이 층", "2층", "이층"]], img: "building.jpg" },
+                { q: "<b>약국은 어디에 있어요?</b><br>(제시어: <span class='target-word'>1층, 편의점 옆</span>)", required: [["일 층", "1층", "일층"], ["편의점 옆", "옆"]], img: "building.jpg" },
+                { q: "<b>어디에 살아요?</b>", required: [["층"], ["살아", "살아요"]], img: "image_4eb4ef.jpg" }
+            ]
+        },
+        {
+            stage: "STAGE 8",
+            grammarTitle: "보너스 종합 챌린지",
+            mascotSpeech: "보너스 챌린지 문제들을 풀어봐요!",
+            hint: "<b>[보기]</b> 유학생 친구들의 다양한 일상 회화 표현",
+            questions: [
+                { q: "<b>이것은 누구의 열쇠예요?</b><br>(제시어: <span class='target-word'>무함마사이드</span>)", required: ["무함마사이드", "열쇠"] },
+                { q: "<b>난딘체첵, 손을 어디에서 씻어요?</b><br>(제시어: <span class='target-word'>화장실</span>)", required: ["화장실", "씻어"] },
+                { q: "<b>누가 비케시예요?</b>", required: [["제가 비켓이에요", "제가 비케시예요"]], forbidden: ["저는"] },
+                { q: "<b>사미르, 김치가 맛있어요?</b>", required: [["네, 김치가 맛있어요", "아니요, 김치는 맛없어요", "맛있어요", "맛없어요"]] },
+                { q: "<b>커머라, 누구랑 손을 잡아요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과) 함께, 소스티카</span>)", required: ["소스티카", ["랑", "하고", "와", "과", "함께"]] },
+                { q: "<b>융, 편의점에서 무엇을 사요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과), 콜라, 김밥</span>)", required: [["콜라", "김밥"], ["사요", "사"]] },
+                { q: "<b>마디나 씨, 어디에 다녀요?</b><br>(제시어: <span class='target-word'>학교</span>)", required: ["학교", "다녀"] },
+                { q: "<b>티웬, 누구랑 점심을 먹어요?</b><br>(제시어: <span class='target-word'>엘백, 로젼, 사와드</span>)", required: [["엘백", "로젼", "사와드"], ["점심", "먹"]] },
+                { q: "<b>푹히엡은 누구와 같이 커피를 마셔요?</b><br>(제시어: <span class='target-word'>아인, 린</span>)", required: [["아인", "린"], ["커피", "마셔"]] },
+                { q: "<b>힘살리, 필통 안에 지우개가 있어요?</b>", required: [["네, 제 필통 안에 지우개가 있어요", "네, 필통 안에 지우개가 있어요", "아니요, 필통 안에 지우개가 없어요", "아니요, 제 필통 안에 지우개가 없어요", "있어", "없어"]] },
+                { q: "<b>나키샤, 목요일에 학교에 가요?</b><br>(제시어: <span class='target-word'>네</span>)", required: ["네", "목요일", "학교", "가"] },
+                { q: "<b>라흐마툴로, 생일에 무엇을 해요?</b><br>(제시어: <span class='target-word'>친구들, (이)랑/하고/(와)과, 파티</span>)", required: ["친구", "파티"] },
+                { q: "<b>압둘라술벡, 심심할 때 무엇을 해요?</b><br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악", "들어"] }
+            ]
+        }
+    ];
+
+    let currentStageIndex = 0;
+    let currentQIndex = 0;
+    let isGreetingStep = true; 
+    let score = 0;
+    let stageScore = 0;
+    let stageResults = []; 
+    let firstRoundClearCount = 0;
+    let retrySuccessCount = 0;
+    let unresolvedCount = 0;
+    let wrongAttempts = 0;
+    let currentStageWrongQueue = []; 
+    let isRetryMode = false;         
+    let retryAttemptCount = 0;       
+    let recognition = null;
+    let isRecording = false;
+    let finalTranscript = '';
+    let isAnswerProcessing = false;
+
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+        try {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                let cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
+                document.getElementById('user-input').value = cleanText;
+            };
+
+            recognition.onend = function() {
+                if (isRecording) {
+                    stopRecordUI();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("음성 인식 오류:", event.error);
+                stopRecordUI();
+            };
+        } catch(e) {
+            console.error("음성 인식 초기화 실패:", e);
+        }
+    }
+
+    function toggleRecord() {
+        if (!recognition) {
+            initSpeechRecognition();
+        }
+        if (!recognition) {
+            const micStatus = document.getElementById('mic-status');
+            if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 지원하지 않습니다. 텍스트로 입력해 주세요.';
+            return;
+        }
+
+        const btn = document.getElementById('record-btn');
+        const micStatus = document.getElementById('mic-status');
+        
+        if (!isRecording) {
+            try {
+                const currentVal = document.getElementById('user-input').value;
+                if (currentVal && !finalTranscript) {
+                    finalTranscript = currentVal + ' ';
+                }
+                recognition.start();
+                isRecording = true;
+                btn.classList.add('recording');
+                btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+                micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+            } catch (e) {
+                console.error("음성 인식 시작 실패:", e);
+
+                // 첫 문제를 끝낸 직후에는 이전 음성 인식 세션의 onend가
+                // 완전히 끝나기 전에 다음 문제의 녹음 버튼을 누를 수 있습니다.
+                // 이때 Chrome이 InvalidStateError를 내면서 기존 코드가 팝업을 띄웠습니다.
+                // 팝업 대신 인식 객체를 새로 준비한 뒤 잠시 후 다시 시작합니다.
+                isRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '🎤 음성 녹음 시작';
+                if (micStatus) micStatus.innerText = '음성 인식을 다시 준비하고 있어요...';
+
+                try {
+                    recognition.abort();
+                } catch (abortError) {}
+
+                setTimeout(() => {
+                    initSpeechRecognition();
+                    if (!recognition) {
+                        if (micStatus) micStatus.innerText = '음성 인식을 사용할 수 없습니다. 텍스트로 입력해 주세요.';
+                        return;
+                    }
+                    try {
+                        recognition.start();
+                        isRecording = true;
+                        btn.classList.add('recording');
+                        btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+                        if (micStatus) micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+                    } catch (retryError) {
+                        console.error("음성 인식 재시작 실패:", retryError);
+                        isRecording = false;
+                        btn.classList.remove('recording');
+                        btn.innerHTML = '🎤 음성 녹음 시작';
+                        if (micStatus) micStatus.innerText = '음성 인식을 시작할 수 없습니다. 텍스트로 입력해 주세요.';
+                    }
+                }, 250);
+            }
+        } else {
+            stopRecordUI();
+        }
+    }
+
+    function stopRecordUI() {
+        isRecording = false;
+        if (recognition) {
+            try { recognition.stop(); } catch(e){}
+        }
+        const btn = document.getElementById('record-btn');
+        const micStatus = document.getElementById('mic-status');
+        if(btn) {
+            btn.classList.remove('recording');
+            btn.innerHTML = '🎤 음성 녹음 시작';
+        }
+        if(micStatus) {
+            micStatus.innerText = '대기 중';
+        }
+    }
+
+    function openStageSelect() {
+        let listHtml = '';
+        stages.forEach((s, idx) => {
+            listHtml += `
+                <button class="stage-select-btn" onclick="jumpToStage(${idx})">
+                    <b>${s.stage}</b>: ${s.grammarTitle}
+                </button>
+            `;
+        });
+        document.getElementById('stage-select-list').innerHTML = listHtml;
+        document.getElementById('stage-select-modal').style.display = 'flex';
+    }
+
+    function closeStageSelect() {
+        document.getElementById('stage-select-modal').style.display = 'none';
+    }
+
+    function jumpToStage(idx) {
+        closeStageSelect();
+        currentStageIndex = idx;
+        currentQIndex = 0;
+        isGreetingStep = (idx === 0);
+        stageResults = [];
+        stageScore = 0;
+        firstRoundClearCount = 0;
+        retrySuccessCount = 0;
+        unresolvedCount = 0;
+        wrongAttempts = 0;
+        currentStageWrongQueue = [];
+        isRetryMode = false;
+        retryAttemptCount = 0;
+        updateStageUI();
+    }
+
+    function getCurrentQuestionList() {
+        const stageObj = stages[currentStageIndex];
+        if (isRetryMode) return currentStageWrongQueue;
+        return stageObj.questions;
+    }
+
+    function updateProgressUI() {
+        const stageObj = stages[currentStageIndex];
+        const normalTotal = stageObj.questions.length;
+        const progressTitle = document.getElementById('progress-title');
+        const progressCount = document.getElementById('progress-count');
+        const progressFill = document.getElementById('progress-fill');
+        if (!progressTitle) return;
+
+        if (currentStageIndex === 0 && isGreetingStep) {
+            progressTitle.innerText = '시작 인사';
+            progressCount.innerText = '준비';
+            progressFill.style.width = '0%';
+        } else if (isRetryMode) {
+            progressTitle.innerText = '오답 다시 도전';
+            progressCount.innerText = `${Math.min(currentQIndex + 1, currentStageWrongQueue.length)} / ${currentStageWrongQueue.length}`;
+            progressFill.style.width = `${normalTotal ? (firstRoundClearCount / normalTotal) * 100 : 0}%`;
+        } else {
+            progressTitle.innerText = '스테이지 진행';
+            progressCount.innerText = `${Math.min(currentQIndex + 1, normalTotal)} / ${normalTotal}`;
+            progressFill.style.width = `${normalTotal ? (Math.min(currentQIndex, normalTotal) / normalTotal) * 100 : 0}%`;
+        }
+
+        document.getElementById('clear-count').innerText = firstRoundClearCount + retrySuccessCount;
+        document.getElementById('wrong-count').innerText = currentStageWrongQueue.length;
+        document.getElementById('stage-score').innerText = `${stageScore}점`;
+    }
+
+    function updateStageUI() {
+        const stageObj = stages[currentStageIndex];
+        const visualArea = document.getElementById('visual-area');
+        visualArea.innerHTML = ''; 
+
+        if (currentStageIndex === 0 && isGreetingStep) {
+            document.getElementById('stage-indicator').innerText = `STAGE 1 (시작 인사)`;
+            document.getElementById('mascot-speech').innerText = "안녕하세요? 처음 뵙겠습니다.";
+            document.getElementById('hint-text').innerHTML = "<b>[인사]</b> 첫 인사를 나누어 보세요.";
+            document.getElementById('question-text').innerHTML = `인사해 보세요.<br>(제시어: <span class='target-word'>안녕하세요, 반갑습니다</span>)`;
+        } else {
+            let qList = getCurrentQuestionList();
+            let totalQ = qList.length;
+            let badgeText = isRetryMode ? `${stageObj.stage} (오답 재도전 ${retryAttemptCount}/2)` : stageObj.stage;
+            
+            document.getElementById('stage-indicator').innerText = `${badgeText} (${currentQIndex + 1}/${totalQ})`;
+            document.getElementById('mascot-speech').innerText = stageObj.mascotSpeech;
+            document.getElementById('hint-text').innerHTML = stageObj.hint;
+            
+            const currentQ = qList[currentQIndex];
+            document.getElementById('question-text').innerHTML = currentQ.q;
+
+            if (currentQ.img) {
+                let style = "width: 100%; height: 190px; object-fit: contain; border-radius: 10px; background: #FFF;";
+                visualArea.innerHTML = `<div class="visual-container"><img src="${currentQ.img}" alt="문제 이미지" style="${style}"></div>`;
+            }
+        }
+        
+        finalTranscript = '';
+        document.getElementById('user-input').value = '';
+        document.getElementById('feedback-area').style.display = 'none';
+        stopRecordUI();
+        updateProgressUI();
+    }
+
+    function submitAnswer() {
+        if (isAnswerProcessing) return;
+        isAnswerProcessing = true;
+        let inputVal = document.getElementById('user-input').value.trim();
+        const feedbackBox = document.getElementById('feedback-area');
+        
+        if (!inputVal) {
+            alert("답변을 말씀하시거나 텍스트로 입력해주세요!");
+            isAnswerProcessing = false;
+            return;
+        }
+
+        stopRecordUI();
+        inputVal = inputVal.replace(/[?？?]/g, '').trim();
+
+        if (currentStageIndex === 0 && isGreetingStep) {
+            let greetingMatched = ["안녕하세요", "반갑습니다"].every(keyword => inputVal.includes(keyword));
+            if (!greetingMatched) {
+                document.getElementById('mascot-img').src = 'hint.png';
+                feedbackBox.style.display = 'block';
+                feedbackBox.style.background = '#FEE2E2';
+                feedbackBox.style.color = '#991B1B';
+                feedbackBox.style.borderColor = '#FECACA';
+                feedbackBox.innerHTML = `❌ <b>인사말을 확인해보세요!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 "안녕하세요? 만나서 반갑습니다."라고 인사해보세요.`;
+                isAnswerProcessing = false;
+                return;
+            }
+
+            isGreetingStep = false;
+            document.getElementById('mascot-img').src = 'success.png';
+            feedbackBox.style.display = 'block';
+            feedbackBox.style.background = '#ECFDF5';
+            feedbackBox.style.color = '#065F46';
+            feedbackBox.style.borderColor = '#A7F3D0';
+            feedbackBox.innerHTML = `🎉 <b>반갑습니다! 본격적인 퀘스트를 시작합니다.</b>`;
+            triggerConfetti();
+
+            setTimeout(() => {
+                document.getElementById('mascot-img').src = 'hint.png';
+                updateStageUI();
+            }, 2000);
+            return;
+        }
+
+        if (inputVal.includes("저가")) {
+            wrongAttempts++;
+            document.getElementById('mascot-img').src = 'hint.png';
+            feedbackBox.style.display = 'block';
+            feedbackBox.style.background = '#FEE2E2';
+            feedbackBox.style.color = '#991B1B';
+            feedbackBox.style.borderColor = '#FECACA';
+            document.getElementById('user-input').value = '';
+            finalTranscript = '';
+            feedbackBox.innerHTML = `❌ <b>대명사 오류!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 '저가'는 틀린 말이에요! <b>'제가'</b> 또는 <b>'저는'</b>을 사용해 주세요.`;
+            isAnswerProcessing = false;
+            return;
+        }
+
+        let qList = getCurrentQuestionList();
+        const currentQ = qList[currentQIndex];
+        
+        let matched = true;
+        let customErrorMsg = "";
+
+        if (currentStageIndex === 0 && inputVal.includes("입니다")) {
+            matched = false;
+            customErrorMsg = "'입니다'는 격식체예요. 비격식체인 '이에요'를 사용해 주세요!";
+        }
+
+        if (currentStageIndex === 2 && inputVal.includes("사어요")) {
+            matched = false;
+            customErrorMsg = "'사다'의 올바른 형태는 '사요'예요!";
+        }
+
+        // STAGE 3.5 2번: 한국 생활 + 한국어 공부를 다양한 자연스러운 문장으로 허용
+        // 예: "나는 한국에서 한국어 공부를 해요."
+        //     "저는 한국에 살아요. 한국어 공부를 해요."
+        //     "저는 한국에 한국어 공부를 하러 왔어요."
+        //     "저는 한국이 좋아요. 한국어 공부를 해요."
+        if (currentStageIndex === 2 && currentQIndex === 1) {
+            const hasKorea = inputVal.includes("한국");
+            const hasStudy = inputVal.includes("공부");
+            if (hasKorea && hasStudy) {
+                matched = true;
+            } else {
+                matched = false;
+                customErrorMsg = "'한국'과 '한국어 공부'를 넣어서 자연스럽게 말해보세요.";
+            }
+        }
+
+        if (currentStageIndex === 1) {
+            // STAGE 2: 대답 안에서 지시사를 섞어 쓰지 않도록 한다.
+            // 예: "이것은 지우개가 아니에요. 그것은 필통이에요." → 오답
+            //     "이것은 지우개가 아니에요. 이것은 필통이에요." → 정답 후보
+            const hasIgeoseun = inputVal.includes("이것은");
+            const hasGeugeoseun = inputVal.includes("그것은");
+            if (hasIgeoseun && hasGeugeoseun) {
+                matched = false;
+                customErrorMsg = "대답에서는 지시사를 하나로 통일해 주세요. <b>'이것은'</b>을 사용했다면 끝까지 '이것은', <b>'그것은'</b>을 사용했다면 끝까지 '그것은'으로 말해 주세요.";
+            } else if (currentQ.qDemo === "그것은" && hasGeugeoseun) {
+                matched = false;
+                customErrorMsg = "'그것은'으로 물었을 때는 화자 기준인 <b>'이것은'</b>으로 대답해야 해요!";
+            }
+        }
+
+        if (currentStageIndex === 6 && currentQ.forbidden) {
+            if (currentQ.forbidden.some(f => inputVal.includes(f))) {
+                matched = false;
+                customErrorMsg = "지갑의 위치를 표현할 때는 '가방과 가방 사이' 형태로 정확히 표현해보세요.";
+            }
+        }
+
+        if (currentStageIndex === 7 && currentQ.type === "birthday") {
+            if (inputVal.includes("육월")) {
+                matched = false;
+                customErrorMsg = "6월은 '육월'이 아니라 반드시 <b>'유월'</b>로 읽어야 해요!";
+            } else if (inputVal.includes("십월")) {
+                matched = false;
+                customErrorMsg = "10월은 '십월'이 아니라 반드시 <b>'시월'</b>로 읽어야 해요!";
+            } else if (inputVal.includes("하나월") || inputVal.includes("둘월") || inputVal.includes("셋월")) {
+                matched = false;
+                customErrorMsg = "월을 읽을 때는 한자어 수(일, 이, 삼...)를 사용해야 해요!";
+            }
+        }
+
+        if (currentStageIndex === 7 && currentQIndex === 2 && inputVal.includes("저는")) {
+            matched = false;
+            customErrorMsg = "질문이 '누가 사미르예요?'이므로 <b>'제가 사미르예요'</b>로 대답해야 해요!";
+        }
+
+        if (currentQ.particleType && !inputVal.includes(currentQ.particleType)) {
+            matched = false;
+            customErrorMsg = `장소에 맞는 '${'${currentQ.particleType}'}' 조사를 사용해 주세요.`;
+        }
+
+        if (currentQ.forbidden && currentQ.forbidden.some(f => inputVal.includes(f))) {
+            matched = false;
+        }
+
+        function matchesRequirement(requirement) {
+            if (Array.isArray(requirement)) {
+                // 한 단계 배열: 여러 표현 중 하나를 허용
+                // 중첩 배열: 각 조건 묶음을 모두 만족해야 함
+                if (requirement.some(item => Array.isArray(item))) {
+                    return requirement.every(item => matchesRequirement(item));
+                }
+                return requirement.some(alt => inputVal.includes(alt));
+            }
+            return inputVal.includes(requirement);
+        }
+
+        if (matched) {
+            matched = currentQ.required.every(matchesRequirement);
+        }
+
+        if (!matched) {
+            document.getElementById('mascot-img').src = 'hint.png';
+            feedbackBox.style.display = 'block';
+            feedbackBox.style.background = '#FEF3C7';
+            feedbackBox.style.color = '#92400E';
+            feedbackBox.style.borderColor = '#FDE68A';
+
+            document.getElementById('user-input').value = '';
+            finalTranscript = '';
+
+            if (!isRetryMode) {
+                // 일반 문제: 문제마다 최대 3번까지 연속으로 도전한다.
+                // 1회 또는 2회 틀린 뒤 3회 안에 맞히면 즉시 클리어(100점).
+                // 3회 모두 틀린 경우에만 오답 목록에 넣고 다음 문제로 넘어간다.
+                retryAttemptCount++;
+
+                if (retryAttemptCount < 3) {
+                    feedbackBox.innerHTML = `🌱 <b>조금 아쉬워요!</b><br>한 번 더 생각해서 다시 말해보세요. (도전 ${retryAttemptCount}/3회)`;
+                    isAnswerProcessing = false;
+                    return;
+                }
+
+                // 정확히 3회 모두 틀린 문제만 스테이지 마지막 재도전 목록에 추가
+                if (!currentStageWrongQueue.includes(currentQ)) {
+                    currentStageWrongQueue.push(currentQ);
+                }
+
+                feedbackBox.innerHTML = `📌 <b>3번 모두 틀렸어요.</b><br>스테이지 마지막에 다시 풀 수 있어요. (마지막 재도전 기회 2회)`;
+                retryAttemptCount = 0;
+                updateProgressUI();
+                setTimeout(() => {
+                    isAnswerProcessing = false;
+                    advanceQuestion();
+                }, 2000);
+                return;
+            } else {
+                retryAttemptCount++;
+                if (retryAttemptCount < 2) {
+                    feedbackBox.innerHTML = `💪 <b>다시 한번 생각해볼까요? (재도전 ${retryAttemptCount}/2회)</b><br>💡 ${customErrorMsg || '핵심 키워드를 넣어서 다시 말해보세요!'}`;
+                    isAnswerProcessing = false;
+                    return;
+                } else {
+                    let correctDesc = Array.isArray(currentQ.required[0]) ? (Array.isArray(currentQ.required[0][0]) ? currentQ.required[0][0].join(' ') : currentQ.required[0][0]) : currentQ.required[0];
+                    feedbackBox.innerHTML = `📚 <b>아쉽네요! 정답은 [ ${correctDesc} ... ] 입니다. (0점)</b><br>💡 정답을 확인하고 다음으로 넘어갑니다.`;
+                    
+                    stageResults.push({
+                        qNum: `재도전-${currentQIndex + 1}`,
+                        ox: "❌ 재도전 실패(0점)",
+                        userAnswer: inputVal,
+                        comment: "재도전 2회를 모두 소진하여 정답을 학습하고 넘어갔습니다."
+                    });
+                    unresolvedCount++;
+
+                    retryAttemptCount = 0;
+                    updateProgressUI();
+                    setTimeout(() => {
+                        isAnswerProcessing = false;
+                        advanceRetryQuestion();
+                    }, 3500);
+                    return;
+                }
+            }
+        }
+
+        const wasRetryMode = isRetryMode;
+        let earnedScore = wasRetryMode ? 50 : 100;
+        score += earnedScore;
+        stageScore += earnedScore;
+        if (wasRetryMode) { retrySuccessCount++; }
+        else { firstRoundClearCount++; }
+        document.getElementById('score').innerText = `⭐ ${score}점`;
+        updateProgressUI();
+
+        stageResults.push({
+            qNum: wasRetryMode ? `재도전-${currentQIndex + 1}` : currentQIndex + 1,
+            ox: wasRetryMode ? "⭕ 재도전 성공(50점)" : "⭕ 정답(100점)",
+            userAnswer: inputVal,
+            comment: "정확하게 잘 표현했어요! ✨"
+        });
+
+        wrongAttempts = 0;
+        if (!wasRetryMode) isRetryMode = false;
+        document.getElementById('mascot-img').src = 'success.png';
+        feedbackBox.style.display = 'block';
+        feedbackBox.style.background = '#ECFDF5';
+        feedbackBox.style.color = '#065F46';
+        feedbackBox.style.borderColor = '#A7F3D0';
+        feedbackBox.innerHTML = `🎉 <b>정답입니다! (+${earnedScore}점)</b><br>💬 <b>내가 말한 내용:</b> "${inputVal}"<br>✨ 아주 잘했어요!`;
+        
+        triggerConfetti();
+
+        setTimeout(() => {
+            document.getElementById('mascot-img').src = 'hint.png';
+            isAnswerProcessing = false;
+            if (wasRetryMode) {
+                advanceRetryQuestion();
+            } else {
+                advanceQuestion();
+            }
+        }, 2000);
+    }
+
+    function advanceQuestion() {
+        currentQIndex++;
+        const stageObj = stages[currentStageIndex];
+        let normalQuestions = stageObj.questions;
+        
+        if (currentQIndex < normalQuestions.length) {
+            updateStageUI();
+        } else {
+            if (currentStageWrongQueue.length > 0) {
+                isRetryMode = true;
+                currentQIndex = 0;
+                retryAttemptCount = 0;
+                alert(`💪 모든 문제를 다 풀었어요!\n이제 아쉽게 틀렸던 문제들을 다시 한번 도전해볼까요? (재도전 기회 2번)`);
+                updateStageUI();
+            } else {
+                showClearModal();
+            }
+        }
+    }
+
+    function advanceRetryQuestion() {
+        currentQIndex++;
+        retryAttemptCount = 0;
+        if (currentQIndex < currentStageWrongQueue.length) {
+            updateStageUI();
+        } else {
+            showClearModal();
+        }
+    }
+
+    function showClearModal() {
+        const stageObj = stages[currentStageIndex];
+        document.getElementById('modal-stage-title').innerText = `${stageObj.stage} 클리어! 🎉`;
+        
+        let reportHtml = `
+            <div class="achievement-summary">
+                <div class="achievement-card"><div class="achievement-number">${firstRoundClearCount}</div><div class="achievement-label">3회 안 클리어</div></div>
+                <div class="achievement-card"><div class="achievement-number">${retrySuccessCount}</div><div class="achievement-label">재도전 성공</div></div>
+                <div class="achievement-card"><div class="achievement-number">${unresolvedCount}</div><div class="achievement-label">다시 공부할 문제</div></div>
+            </div>
+            <div class="report-item" style="text-align:center; background:#EEF2FF; border-color:#C7D2FE;">
+                <b>이번 스테이지 ${stageScore}점</b><br>
+                <span style="color:#64748B; font-size:0.82rem;">누적 점수 ${score}점</span>
+            </div>`;
+        if (stageResults.length === 0) {
+            reportHtml += `<div class="report-item" style="text-align: center; color: #10B981; font-weight: bold;">모든 문제를 한 번에 맞혔습니다! 완벽해요! 🌟</div>`;
+        } else {
+            stageResults.forEach(res => {
+                reportHtml += `
+                    <div class="report-item">
+                        <div class="report-item-header">
+                            <span><b>[문항 ${res.qNum}]</b></span>
+                            <span style="color: ${res.ox.includes('정답') || res.ox.includes('성공') ? '#10B981' : '#F43F5E'};"><b>${res.ox}</b></span>
+                        </div>
+                        <div style="color: #334155; margin-top: 2px;">💬 답변: "${res.userAnswer}"</div>
+                        <div style="color: #64748B; font-size: 0.8rem; margin-top: 2px;">💡 피드백: ${res.comment}</div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('modal-report-list').innerHTML = reportHtml;
+        document.getElementById('clear-modal').style.display = 'flex';
+    }
+
+    function proceedNextStage() {
+        document.getElementById('clear-modal').style.display = 'none';
+        
+        currentStageIndex++;
+        if (currentStageIndex >= stages.length) {
+            alert("🏆 축하합니다! 모든 1~8단계 대장정을 완벽하게 클리어했습니다!");
+            currentStageIndex = 0;
+            isGreetingStep = true;
+            score = 0;
+            stageScore = 0;
+        }
+
+        currentQIndex = 0;
+        stageResults = []; 
+        stageScore = 0;
+        firstRoundClearCount = 0;
+        retrySuccessCount = 0;
+        unresolvedCount = 0;
+        wrongAttempts = 0;
+        currentStageWrongQueue = [];
+        isRetryMode = false;
+        retryAttemptCount = 0;
+        updateStageUI();
+    }
+
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.style.display = 'block';
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+
+        let particles = [];
+        const colors = ['#6366F1', '#A855F7', '#F43F5E', '#10B981', '#F59E0B'];
+
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8 - 3,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2;
+                p.alpha -= 0.02;
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(p.alpha, 0);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animate);
+            } else {
+                canvas.style.display = 'none';
+            }
+        }
+        animate();
+    }
+
+    initSpeechRecognition();
+    updateStageUI();
+</script>
+
+</body>
+</html>
