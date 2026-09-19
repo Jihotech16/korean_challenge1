@@ -974,6 +974,10 @@
         return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
     }
 
+    function useSafariSpeechMode() {
+        return isIOSDevice() || isSafariBrowser();
+    }
+
     function shouldUseServerStt() {
         return !hasBrowserSpeechRecognition();
     }
@@ -1051,8 +1055,44 @@
         clearSpeechFinalizeTimer();
         isRecording = false;
         isSpeechFinalizing = false;
+        discardBackupRecorder();
         setRecordReadyUI(statusText || speechStatusFromInput());
         setSubmitEnabled(true);
+    }
+
+    function discardBackupRecorder() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            try { mediaRecorder.ondataavailable = null; } catch (e) {}
+            try { mediaRecorder.stop(); } catch (e) {}
+        }
+        mediaRecorder = null;
+        if (audioStream) {
+            audioStream.getTracks().forEach(function(track) { track.stop(); });
+            audioStream = null;
+        }
+        recordedChunks = [];
+    }
+
+    async function startBackupRecorder() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') return;
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            if (!isRecording && !isSpeechFinalizing) {
+                audioStream.getTracks().forEach(function(track) { track.stop(); });
+                audioStream = null;
+                return;
+            }
+            recordedChunks = [];
+            const mimeType = pickRecorderMime();
+            mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
+            mediaRecorder.ondataavailable = function(event) {
+                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
+            };
+            mediaRecorder.start(250);
+        } catch (e) {
+            console.warn(e);
+            mediaRecorder = null;
+        }
     }
 
     function initSpeechRecognition() {
@@ -1074,25 +1114,29 @@
             };
 
             recognition.onend = function() {
-                if (isRecording) {
+                const input = document.getElementById('user-input');
+                const text = input ? input.value.trim() : '';
+                if (text) {
+                    finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
+                    return;
+                }
+                if (isSpeechFinalizing) {
+                    return;
+                }
+                if (isRecording && !useSafariSpeechMode()) {
                     try {
                         recognition.start();
                     } catch (e) {
                         finishSpeechSession(speechStatusFromInput());
-                    }
-                    return;
-                }
-                if (isSpeechFinalizing) {
-                    const input = document.getElementById('user-input');
-                    const text = input ? input.value.trim() : '';
-                    if (text) {
-                        finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
                     }
                 }
             };
 
             recognition.onerror = function(event) {
                 if (event.error === 'aborted' || event.error === 'no-speech') {
+                    return;
+                }
+                if (useSafariSpeechMode() && mediaRecorder) {
                     return;
                 }
                 console.error("음성 인식 오류:", event.error);
@@ -1137,7 +1181,7 @@
         const micStatus = document.getElementById('mic-status');
         const input = document.getElementById('user-input');
 
-        if (mediaRecorder && (isRecording || mediaRecorder.state === 'recording')) {
+        if (!recognition && mediaRecorder && (isRecording || mediaRecorder.state === 'recording')) {
             toggleServerRecord();
             return;
         }
@@ -1171,6 +1215,7 @@
 
             try {
                 recognition.start();
+                if (useSafariSpeechMode()) startBackupRecorder();
             } catch (e) {
                 console.error("음성 인식 시작 실패:", e);
                 isRecording = false;
@@ -1187,6 +1232,7 @@
                     setSubmitEnabled(false);
                     try {
                         recognition.start();
+                        if (useSafariSpeechMode()) startBackupRecorder();
                         btn.classList.add('recording');
                         btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
                         micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
@@ -1219,7 +1265,7 @@
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data && event.data.size > 0) recordedChunks.push(event.data);
             };
-            mediaRecorder.start();
+            mediaRecorder.start(250);
             isRecording = true;
             setSubmitEnabled(false);
             btn.classList.add('recording');
@@ -1239,6 +1285,7 @@
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
         isRecording = false;
+        isSpeechFinalizing = false;
         btn.classList.remove('recording');
         btn.innerHTML = '🎤 음성 녹음 시작';
         if (!mediaRecorder) {
@@ -1291,11 +1338,6 @@
     }
 
     function stopRecordUI() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            stopServerRecord();
-            return;
-        }
-
         isRecording = false;
         isSpeechFinalizing = true;
 
@@ -1309,27 +1351,33 @@
             btn.innerHTML = '🎤 음성 녹음 시작';
         }
 
+        if (recognition) {
+            try { recognition.stop(); } catch (e) {}
+        }
+
         if (text) {
-            if (recognition) {
-                try { recognition.stop(); } catch (e) {}
-            }
             finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
             return;
         }
 
         if (micStatus) micStatus.innerText = '음성 결과를 확인하고 있어요...';
-        setSubmitEnabled(true);
-
-        if (recognition) {
-            try { recognition.stop(); } catch (e) {}
-        }
+        setSubmitEnabled(false);
 
         clearSpeechFinalizeTimer();
         speechFinalizeTimer = setTimeout(function() {
             const later = document.getElementById('user-input');
             const laterText = later ? later.value.trim() : '';
-            finishSpeechSession(laterText ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.');
-        }, 2000);
+            if (laterText) {
+                finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
+                return;
+            }
+            if (mediaRecorder) {
+                if (micStatus) micStatus.innerText = '알아듣는 중...';
+                stopServerRecord();
+                return;
+            }
+            finishSpeechSession('음성을 인식하지 못했어요. 다시 녹음해 주세요.');
+        }, 1200);
     }
 
     function openStageSelect() {
