@@ -763,65 +763,19 @@
         return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    function isSafariBrowser() {
-        const ua = navigator.userAgent || '';
-        return /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua);
-    }
-
-    function shouldUseWhisper() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return true;
-        return isIOSDevice() || isSafariBrowser();
-    }
-
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let audioStream = null;
-    let whisperTranscriber = null;
-    let whisperLoading = null;
-
-    function pickRecorderMime() {
-        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
-        if (typeof MediaRecorder === 'undefined') return '';
-        return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
-    }
-
-    async function getWhisperTranscriber(statusEl) {
-        if (whisperTranscriber) return whisperTranscriber;
-        if (whisperLoading) return whisperLoading;
-        whisperLoading = (async () => {
-            if (statusEl) statusEl.innerText = '음성 모델을 준비하는 중... 처음 한 번만 조금 걸려요.';
-            const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-            env.allowLocalModels = false;
-            env.useBrowserCache = true;
-            whisperTranscriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
-                progress_callback: (data) => {
-                    if (!statusEl || !data) return;
-                    if (data.status === 'progress' && data.total) {
-                        const pct = Math.round((data.loaded / data.total) * 100);
-                        statusEl.innerText = `음성 모델 받는 중... ${pct}%`;
-                    } else if (data.status === 'ready') {
-                        statusEl.innerText = '음성 모델 준비 완료. 이제 말해 주세요!';
-                    }
-                }
-            });
-            return whisperTranscriber;
-        })();
-        try {
-            return await whisperLoading;
-        } catch (e) {
-            whisperLoading = null;
-            throw e;
+    function unsupportedSpeechMessage() {
+        if (isIOSDevice()) {
+            return '아이폰은 구글 음성 인식을 쓸 수 없습니다. 안드로이드 Chrome에서 열거나 직접 입력해 주세요.';
         }
+        return '이 브라우저는 구글 음성 인식을 지원하지 않습니다. Chrome에서 열거나 직접 입력해 주세요.';
     }
 
     function initSpeechRecognition() {
-        if (shouldUseWhisper()) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition || isIOSDevice()) {
             recognition = null;
             return;
         }
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return;
         try {
             recognition = new SpeechRecognition();
             recognition.lang = 'ko-KR';
@@ -849,24 +803,29 @@
 
             recognition.onerror = function(event) {
                 console.error("음성 인식 오류:", event.error);
-                stopRecordUI();
+                const micStatus = document.getElementById('mic-status');
+                const messages = {
+                    'not-allowed': '마이크 권한이 차단되었습니다. 주소창 왼쪽에서 마이크를 허용해 주세요.',
+                    'service-not-allowed': '구글 음성 인식이 차단되었습니다. Chrome에서 다시 열어 주세요.',
+                    'audio-capture': '마이크를 찾을 수 없습니다. 연결을 확인해 주세요.',
+                    'no-speech': '음성이 들리지 않았어요. 다시 눌러서 천천히 말해 보세요.'
+                };
+                if (micStatus) micStatus.innerText = messages[event.error] || '음성 인식을 사용할 수 없습니다. 직접 입력해 주세요.';
+                stopRecordUI(false);
             };
         } catch(e) {
             console.error("음성 인식 초기화 실패:", e);
+            recognition = null;
         }
     }
 
     function toggleRecord() {
-        if (shouldUseWhisper()) {
-            toggleWhisperRecord();
-            return;
-        }
         if (!recognition) {
             initSpeechRecognition();
         }
         if (!recognition) {
             const micStatus = document.getElementById('mic-status');
-            if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 지원하지 않습니다. 텍스트로 입력해 주세요.';
+            if (micStatus) micStatus.innerText = unsupportedSpeechMessage();
             return;
         }
 
@@ -898,7 +857,7 @@
                 setTimeout(() => {
                     initSpeechRecognition();
                     if (!recognition) {
-                        if (micStatus) micStatus.innerText = '음성 인식을 사용할 수 없습니다. 텍스트로 입력해 주세요.';
+                        if (micStatus) micStatus.innerText = unsupportedSpeechMessage();
                         return;
                     }
                     try {
@@ -912,7 +871,7 @@
                         isRecording = false;
                         btn.classList.remove('recording');
                         btn.innerHTML = '🎤 음성 녹음 시작';
-                        if (micStatus) micStatus.innerText = '음성 인식을 시작할 수 없습니다. 텍스트로 입력해 주세요.';
+                        if (micStatus) micStatus.innerText = '음성 인식을 시작할 수 없습니다. 직접 입력해 주세요.';
                     }
                 }, 250);
             }
@@ -921,88 +880,10 @@
         }
     }
 
-    async function toggleWhisperRecord() {
-        const btn = document.getElementById('record-btn');
-        const micStatus = document.getElementById('mic-status');
-        if (isRecording) {
-            await stopWhisperRecord();
-            return;
-        }
-        try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recordedChunks = [];
-            const mimeType = pickRecorderMime();
-            mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            btn.classList.add('recording');
-            btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-            micStatus.innerText = '🔴 듣는 중... 말한 뒤 버튼을 다시 눌러 주세요.';
-        } catch (e) {
-            console.error(e);
-            micStatus.innerText = '마이크 권한이 필요해요. 설정에서 마이크를 허용해 주세요.';
-            isRecording = false;
-            btn.classList.remove('recording');
-            btn.innerHTML = '🎤 음성 녹음 시작';
-        }
-    }
-
-    async function stopWhisperRecord() {
-        const btn = document.getElementById('record-btn');
-        const micStatus = document.getElementById('mic-status');
+    function stopRecordUI(callStop) {
         isRecording = false;
-        btn.classList.remove('recording');
-        btn.innerHTML = '🎤 음성 녹음 시작';
-        if (!mediaRecorder) {
-            if (micStatus) micStatus.innerText = '대기 중';
-            return;
-        }
-        const blob = await new Promise((resolve) => {
-            mediaRecorder.onstop = () => {
-                resolve(new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' }));
-            };
-            try { mediaRecorder.stop(); } catch (e) { resolve(null); }
-        });
-        if (audioStream) {
-            audioStream.getTracks().forEach(track => track.stop());
-            audioStream = null;
-        }
-        mediaRecorder = null;
-        if (!blob || blob.size < 500) {
-            if (micStatus) micStatus.innerText = '말이 잘 들리지 않았어요. 다시 녹음해 주세요.';
-            return;
-        }
-        try {
-            const transcriber = await getWhisperTranscriber(micStatus);
-            if (micStatus) micStatus.innerText = '알아듣는 중...';
-            const url = URL.createObjectURL(blob);
-            const result = await transcriber(url, { language: 'korean', task: 'transcribe' });
-            URL.revokeObjectURL(url);
-            const text = (result && result.text ? result.text : '').replace(/[?？?]/g, '').trim();
-            const input = document.getElementById('user-input');
-            if (text) {
-                input.value = input.value ? (input.value.trim() + ' ' + text) : text;
-                if (micStatus) micStatus.innerText = '대기 중';
-            } else if (micStatus) {
-                micStatus.innerText = '글자로 바꾸지 못했어요. 다시 말해 보거나 직접 입력해 주세요.';
-            }
-        } catch (e) {
-            console.error(e);
-            if (micStatus) micStatus.innerText = '아이폰 음성 인식을 준비하지 못했어요. 직접 입력해 주세요.';
-        }
-    }
-
-    function stopRecordUI() {
-        isRecording = false;
-        if (recognition) {
+        if (callStop !== false && recognition) {
             try { recognition.stop(); } catch(e){}
-        }
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            stopWhisperRecord();
-            return;
         }
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
@@ -1010,7 +891,7 @@
             btn.classList.remove('recording');
             btn.innerHTML = '🎤 음성 녹음 시작';
         }
-        if(micStatus) {
+        if(micStatus && micStatus.innerText.indexOf('마이크') < 0 && micStatus.innerText.indexOf('지원하지') < 0 && micStatus.innerText.indexOf('아이폰') < 0 && micStatus.innerText.indexOf('Chrome') < 0 && micStatus.innerText.indexOf('들리지') < 0) {
             micStatus.innerText = '대기 중';
         }
     }
