@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 한국어 문법 퀘스트</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@400;700&display=swap');
+        :root {
+            --primary: #6366F1;
+            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+            --bg: #EEF2FF;
+            --card: #FFFFFF;
+            --text: #1E293B;
+            --muted: #64748B;
+            --line: #E2E8F0;
+            --danger: #F43F5E;
+            --ok: #10B981;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Nunito', 'Apple SD Gothic Neo', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        h1, h2, h3, .brand { font-family: 'Jua', sans-serif; }
+        button, input, textarea, select { font-family: inherit; }
+
+        .gate {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .gate-card, .panel {
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: 0 16px 40px rgba(99,102,241,0.12);
+        }
+        .gate-card {
+            width: 100%;
+            max-width: 380px;
+            padding: 28px 24px;
+            text-align: center;
+        }
+        .gate-card h1 { margin: 0 0 8px; }
+        .gate-card p { color: var(--muted); margin: 0 0 18px; }
+        .app { display: none; min-height: 100vh; }
+        .top {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .top a { color: white; text-decoration: none; }
+        .wrap {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .panel { padding: 16px; }
+        .stage-item, .q-item {
+            width: 100%;
+            text-align: left;
+            border: 1px solid var(--line);
+            background: white;
+            border-radius: 14px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .stage-item.active, .q-item.active {
+            border-color: var(--primary);
+            background: #EEF2FF;
+        }
+        .muted { color: var(--muted); font-size: 0.85rem; }
+        label { display: block; font-weight: 700; margin: 12px 0 6px; font-size: 0.9rem; }
+        input, textarea, select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 16px;
+        }
+        textarea { min-height: 88px; resize: vertical; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .btn {
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            color: white;
+        }
+        .btn.gray { background: #94A3B8; }
+        .btn.red { background: var(--danger); }
+        .btn.ok { background: var(--ok); }
+        .status {
+            margin-top: 10px;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+        .help {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+        @media (max-width: 800px) {
+            .wrap { grid-template-columns: 1fr; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="gate" id="gate">
+    <div class="gate-card">
+        <div class="brand">관리자 로그인</div>
+        <h1>문제 편집</h1>
+        <p>학생 화면이 아닙니다. 선생님만 들어가 주세요.</p>
+        <input id="password" type="password" placeholder="관리자 비밀번호">
+        <div class="row" style="justify-content:center;">
+            <button class="btn" onclick="login()">들어가기</button>
+        </div>
+        <div class="status" id="login-status"></div>
+    </div>
+</div>
+
+<div class="app" id="app">
+    <div class="top">
+        <div class="brand">문제 관리자</div>
+        <div>
+            <a href="index.html">게임으로</a>
+            &nbsp;|&nbsp;
+            <a href="#" onclick="logout(); return false;">로그아웃</a>
+        </div>
+    </div>
+    <div class="wrap">
+        <div class="panel">
+            <h2>스테이지</h2>
+            <div id="stage-list"></div>
+            <div class="row">
+                <button class="btn" onclick="addStage()">스테이지 추가</button>
+            </div>
+        </div>
+        <div class="panel">
+            <h2 id="editor-title">스테이지 편집</h2>
+            <div id="stage-editor"></div>
+        </div>
+    </div>
+    <div class="wrap" style="grid-template-columns:1fr;">
+        <div class="panel">
+            <h2>저장</h2>
+            <p class="help">
+                <b>이 기기 미리보기</b>는 선생님 휴대폰/컴퓨터에서만 바로 반영됩니다.<br>
+                학생들에게 보이게 하려면 <b>GitHub에 게시</b>하거나 JSON 파일을 받은 뒤 올려 주세요.
+            </p>
+            <label>GitHub 토큰 (게시할 때만 필요)</label>
+            <input id="github-token" type="password" placeholder="repo 권한이 있는 GitHub 토큰">
+            <div class="row">
+                <button class="btn ok" onclick="saveLocal()">이 기기에서 미리보기 저장</button>
+                <button class="btn gray" onclick="clearLocal()">미리보기 지우기</button>
+                <button class="btn gray" onclick="downloadJSON()">JSON 내려받기</button>
+                <button class="btn" onclick="publishGitHub()">GitHub에 게시</button>
+            </div>
+            <div class="status" id="save-status"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ADMIN_PASSWORD = 'korean2026';
+    const GITHUB_OWNER = 'Jihotech16';
+    const GITHUB_REPO = 'korean_challenge1';
+    const IMAGE_OPTIONS = [
+        '', 'hint.png', 'success.png', 'classroom.jpg', 'building.jpg',
+        'clock_class.png', 'clock_dinner.png', 'clock_apt.png',
+        'image_4eb4ef.jpg', 'image_4eb870.jpg', 'image_4eb8eb.jpg', 'image_4eb966.jpg',
+        'image_4ebc53.jpg', 'image_4ebccb.jpg', 'image_5e96a4.png'
+    ];
+
+    let stages = [];
+    let currentStage = 0;
+    let currentQuestion = 0;
+
+    function login() {
+        const value = document.getElementById('password').value;
+        const status = document.getElementById('login-status');
+        if (value !== ADMIN_PASSWORD) {
+            status.innerText = '비밀번호가 올바르지 않습니다.';
+            return;
+        }
+        sessionStorage.setItem('koreanQuestAdmin', '1');
+        openApp();
+    }
+
+    function logout() {
+        sessionStorage.removeItem('koreanQuestAdmin');
+        location.reload();
+    }
+
+    async function openApp() {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        await loadQuestions();
+        renderAll();
+    }
+
+    async function loadQuestions() {
+        const local = localStorage.getItem('koreanQuestQuestions');
+        if (local) {
+            stages = JSON.parse(local);
+            setSaveStatus('이 기기에 저장된 미리보기 문제를 불러왔습니다.');
+            return;
+        }
+        const res = await fetch('questions.json?t=' + Date.now());
+        stages = await res.json();
+        setSaveStatus('현재 공개된 문제를 불러왔습니다.');
+    }
+
+    function renderAll() {
+        renderStageList();
+        renderEditor();
+    }
+
+    function renderStageList() {
+        const list = document.getElementById('stage-list');
+        list.innerHTML = stages.map((stage, index) => `
+            <button class="stage-item ${index === currentStage ? 'active' : ''}" onclick="selectStage(${index})">
+                <b>${escapeHtml(stage.stage || ('STAGE ' + (index + 1)))}</b><br>
+                <span class="muted">${escapeHtml(stage.grammarTitle || '')} · 문제 ${stage.questions.length}개</span>
+            </button>
+        `).join('');
+    }
+
+    function selectStage(index) {
+        currentStage = index;
+        currentQuestion = 0;
+        renderAll();
+    }
+
+    function addStage() {
+        stages.push({
+            stage: 'STAGE ' + (stages.length + 1),
+            grammarTitle: '새 문법',
+            mascotSpeech: '새 스테이지를 시작해봐요!',
+            hint: '<b>[보기]</b> 힌트를 적어 주세요.',
+            questions: [blankQuestion()]
+        });
+        currentStage = stages.length - 1;
+        currentQuestion = 0;
+        renderAll();
+    }
+
+    function blankQuestion() {
+        return { q: '새 문제', required: ['키워드'] };
+    }
+
+    function requiredToText(required) {
+        return (required || []).map(item => Array.isArray(item) ? item.join(' | ') : item).join('\n');
+    }
+
+    function textToRequired(text) {
+        return text.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+            if (line.includes('|')) return line.split('|').map(part => part.trim()).filter(Boolean);
+            return line;
+        });
+    }
+
+    function textToList(text) {
+        return text.split('\n').map(line => line.trim()).filter(Boolean);
+    }
+
+    function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+    }
+
+    function renderEditor() {
+        const stage = stages[currentStage];
+        if (!stage) {
+            document.getElementById('stage-editor').innerHTML = '<p>스테이지가 없습니다.</p>';
+            return;
+        }
+        if (currentQuestion >= stage.questions.length) currentQuestion = 0;
+        const question = stage.questions[currentQuestion] || blankQuestion();
+        document.getElementById('editor-title').innerText = stage.stage + ' 편집';
+        document.getElementById('stage-editor').innerHTML = `
+            <label>스테이지 이름</label>
+            <input id="stage-name" value="${escapeHtml(stage.stage)}">
+            <label>문법 제목</label>
+            <input id="stage-title" value="${escapeHtml(stage.grammarTitle)}">
+            <label>마스코트 말</label>
+            <input id="stage-speech" value="${escapeHtml(stage.mascotSpeech)}">
+            <label>힌트 (HTML 가능)</label>
+            <textarea id="stage-hint">${escapeHtml(stage.hint)}</textarea>
+            <div class="row">
+                <button class="btn gray" onclick="saveStageMeta()">스테이지 정보 저장</button>
+                <button class="btn gray" onclick="moveStage(-1)">위로</button>
+                <button class="btn gray" onclick="moveStage(1)">아래로</button>
+                <button class="btn red" onclick="deleteStage()">스테이지 삭제</button>
+            </div>
+            <h3>문제 ${stage.questions.length}개</h3>
+            <div>${stage.questions.map((item, index) => `
+                <button class="q-item ${index === currentQuestion ? 'active' : ''}" onclick="selectQuestion(${index})">
+                    ${index + 1}. ${escapeHtml(String(item.q || '').replace(/<br>/g, ' ').replace(/<[^>]+>/g, ''))}
+                </button>
+            `).join('')}</div>
+            <div class="row">
+                <button class="btn" onclick="addQuestion()">문제 추가</button>
+            </div>
+            <label>문제 내용 (HTML 가능)</label>
+            <textarea id="q-text">${escapeHtml(question.q || '')}</textarea>
+            <label>정답 키워드</label>
+            <div class="help">한 줄이 꼭 들어가야 하는 조건입니다. 같은 줄에서 <b>|</b> 로 나누면 그중 하나만 있어도 됩니다.<br>예: <code>네팔</code><br>예: <code>사요 | 사</code></div>
+            <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
+            <label>금지 표현 (선택, 한 줄에 하나)</label>
+            <textarea id="q-forbidden">${escapeHtml((question.forbidden || []).join('\n'))}</textarea>
+            <label>이미지</label>
+            <select id="q-img">${IMAGE_OPTIONS.map(img => `<option value="${img}" ${question.img === img ? 'selected' : ''}>${img || '(없음)'}</option>`).join('')}</select>
+            <label>문제 유형</label>
+            <select id="q-type">
+                <option value="" ${!question.type ? 'selected' : ''}>(없음)</option>
+                <option value="positive" ${question.type === 'positive' ? 'selected' : ''}>긍정</option>
+                <option value="negative" ${question.type === 'negative' ? 'selected' : ''}>부정</option>
+                <option value="birthday" ${question.type === 'birthday' ? 'selected' : ''}>생일</option>
+            </select>
+            <label>지시사 보기 (qDemo)</label>
+            <input id="q-demo" value="${escapeHtml(question.qDemo || '')}" placeholder="예: 이것은">
+            <label>조사 검사 (particleType)</label>
+            <select id="q-particle">
+                <option value="" ${!question.particleType ? 'selected' : ''}>(없음)</option>
+                <option value="에" ${question.particleType === '에' ? 'selected' : ''}>에</option>
+                <option value="에서" ${question.particleType === '에서' ? 'selected' : ''}>에서</option>
+            </select>
+            <div class="row">
+                <button class="btn ok" onclick="saveQuestion()">이 문제 저장</button>
+                <button class="btn gray" onclick="moveQuestion(-1)">문제 위로</button>
+                <button class="btn gray" onclick="moveQuestion(1)">문제 아래로</button>
+                <button class="btn red" onclick="deleteQuestion()">문제 삭제</button>
+            </div>
+        `;
+    }
+
+    function saveStageMeta() {
+        const stage = stages[currentStage];
+        stage.stage = document.getElementById('stage-name').value.trim();
+        stage.grammarTitle = document.getElementById('stage-title').value.trim();
+        stage.mascotSpeech = document.getElementById('stage-speech').value.trim();
+        stage.hint = document.getElementById('stage-hint').value;
+        renderAll();
+        setSaveStatus('스테이지 정보를 반영했습니다. 아래 저장 버튼으로 남겨 주세요.');
+    }
+
+    function selectQuestion(index) {
+        saveQuestion(true);
+        currentQuestion = index;
+        renderEditor();
+        renderStageList();
+    }
+
+    function saveQuestion(silent) {
+        const stage = stages[currentStage];
+        if (!stage || !stage.questions[currentQuestion]) return;
+        const question = {
+            q: document.getElementById('q-text').value,
+            required: textToRequired(document.getElementById('q-required').value)
+        };
+        const forbidden = textToList(document.getElementById('q-forbidden').value);
+        const img = document.getElementById('q-img').value;
+        const type = document.getElementById('q-type').value;
+        const qDemo = document.getElementById('q-demo').value.trim();
+        const particleType = document.getElementById('q-particle').value;
+        if (forbidden.length) question.forbidden = forbidden;
+        if (img) question.img = img;
+        if (type) question.type = type;
+        if (qDemo) question.qDemo = qDemo;
+        if (particleType) question.particleType = particleType;
+        stage.questions[currentQuestion] = question;
+        if (!silent) {
+            renderAll();
+            setSaveStatus('문제를 반영했습니다. 학생에게 보이게 하려면 GitHub에 게시해 주세요.');
+        }
+    }
+
+    function addQuestion() {
+        saveQuestion(true);
+        stages[currentStage].questions.push(blankQuestion());
+        currentQuestion = stages[currentStage].questions.length - 1;
+        renderAll();
+    }
+
+    function deleteQuestion() {
+        if (!confirm('이 문제를 삭제할까요?')) return;
+        stages[currentStage].questions.splice(currentQuestion, 1);
+        if (!stages[currentStage].questions.length) stages[currentStage].questions.push(blankQuestion());
+        currentQuestion = Math.max(0, currentQuestion - 1);
+        renderAll();
+    }
+
+    function moveQuestion(dir) {
+        saveQuestion(true);
+        const list = stages[currentStage].questions;
+        const next = currentQuestion + dir;
+        if (next < 0 || next >= list.length) return;
+        [list[currentQuestion], list[next]] = [list[next], list[currentQuestion]];
+        currentQuestion = next;
+        renderAll();
+    }
+
+    function moveStage(dir) {
+        saveStageMeta();
+        const next = currentStage + dir;
+        if (next < 0 || next >= stages.length) return;
+        [stages[currentStage], stages[next]] = [stages[next], stages[currentStage]];
+        currentStage = next;
+        renderAll();
+    }
+
+    function deleteStage() {
+        if (stages.length <= 1) {
+            alert('스테이지는 최소 1개가 필요합니다.');
+            return;
+        }
+        if (!confirm('이 스테이지를 삭제할까요?')) return;
+        stages.splice(currentStage, 1);
+        currentStage = Math.max(0, currentStage - 1);
+        currentQuestion = 0;
+        renderAll();
+    }
+
+    function currentJSON() {
+        saveStageMeta();
+        saveQuestion(true);
+        return JSON.stringify(stages, null, 2);
+    }
+
+    function saveLocal() {
+        localStorage.setItem('koreanQuestQuestions', currentJSON());
+        setSaveStatus('이 기기에 저장했습니다. 게임 화면을 새로고침하면 미리볼 수 있습니다.');
+    }
+
+    function clearLocal() {
+        localStorage.removeItem('koreanQuestQuestions');
+        setSaveStatus('미리보기를 지웠습니다. 이제 공개된 questions.json을 사용합니다.');
+    }
+
+    function downloadJSON() {
+        const blob = new Blob([currentJSON()], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'questions.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        setSaveStatus('questions.json 파일을 내려받았습니다.');
+    }
+
+    function toBase64(str) {
+        return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    async function publishGitHub() {
+        const token = document.getElementById('github-token').value.trim();
+        if (!token) {
+            setSaveStatus('GitHub 토큰을 입력해 주세요. 없으면 JSON 내려받기로 파일을 바꿀 수 있습니다.');
+            return;
+        }
+        setSaveStatus('GitHub에 올리는 중...');
+        const api = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/questions.json`;
+        const headers = {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/vnd.github+json'
+        };
+        const existing = await fetch(api, { headers });
+        const existingJson = existing.ok ? await existing.json() : {};
+        const res = await fetch(api, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({
+                message: '관리자 페이지에서 문제를 수정함',
+                content: toBase64(currentJSON()),
+                sha: existingJson.sha,
+                branch: 'main'
+            })
+        });
+        if (!res.ok) {
+            const err = await res.text();
+            setSaveStatus('게시에 실패했습니다. 토큰 권한을 확인해 주세요. ' + err.slice(0, 180));
+            return;
+        }
+        localStorage.removeItem('koreanQuestQuestions');
+        setSaveStatus('게시에 성공했습니다. 1~2분 뒤 학생 게임에 반영됩니다.');
+    }
+
+    function setSaveStatus(message) {
+        document.getElementById('save-status').innerText = message;
+    }
+
+    document.getElementById('password').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') login();
+    });
+
+    if (sessionStorage.getItem('koreanQuestAdmin') === '1') {
+        openApp();
+    }
+</script>
+</body>
+</html>

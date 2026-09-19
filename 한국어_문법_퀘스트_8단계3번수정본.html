@@ -563,12 +563,45 @@
             .visual-container { height: 125px; min-height: 125px; }
             .visual-container img { height: 115px; }
         }
+
+        .preview-banner {
+            display: none;
+            background: #FEF3C7;
+            color: #92400E;
+            font-size: 0.78rem;
+            text-align: center;
+            padding: 6px 10px;
+            flex-shrink: 0;
+        }
+
+        .load-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.94);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 120;
+            text-align: center;
+            padding: 24px;
+            gap: 8px;
+        }
+
+        .load-overlay.hidden { display: none; }
+        .load-overlay h3 { margin: 0; font-size: 1.1rem; }
+        .load-overlay p { margin: 0; color: #64748B; font-size: 0.85rem; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
     <canvas id="confetti-canvas"></canvas>
+    <div class="load-overlay" id="load-overlay">
+        <h3>문제를 불러오는 중...</h3>
+        <p>잠시만 기다려 주세요.</p>
+    </div>
+    <div class="preview-banner" id="preview-banner">선생님 미리보기 데이터를 사용 중입니다.</div>
 
     <!-- 스테이지 클리어 피드백 팝업 모달 -->
     <div class="modal-overlay" id="clear-modal">
@@ -670,183 +703,42 @@
 </div>
 
 <script>
-    function generateBTemplate(count) {
-        const templates = [
-            { q: "이 가방은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)", required: ["가벼워요", ["가벼워", "가볍"]] },
-            { q: "날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)", required: ["추워요", ["추워", "춥"]] },
-            { q: "이 책은 어때요?<br>(제시어: <span class='target-word'>어렵다</span>)", required: ["어려워요", ["어려워", "어렵"]] },
-            { q: "한국 음식이 어때요?<br>(제시어: <span class='target-word'>맵다</span>)", required: ["매워요", ["매워", "맵"]] },
-            { q: "이 옷은 어때요?<br>(제시어: <span class='target-word'>예쁘다</span>)", required: ["예뻐요", ["예뻐", "예쁘"]] },
-            { q: "이 신발은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)", required: ["가벼워요", ["가벼워", "가볍"]] },
-            { q: "오늘 날씨가 어때요?<br>(제시어: <span class='target-word'>덥다</span>)", required: ["더워요", ["더워", "덥"]] },
-            { q: "이 음식은 어때요?<br>(제시어: <span class='target-word'>맛있다</span>)", required: ["맛있어요", ["맛있어", "맛있"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>문, 닫다</span>)", required: ["문을", ["닫아요", "닫아"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>친구 손, 잡다</span>)", required: ["친구 손을", ["잡아요", "잡아"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>사진, 찍다</span>)", required: ["사진을", ["찍어요", "찍어"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>밥, 먹다</span>)", required: ["밥을", ["먹어요", "먹어"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>물, 마시다</span>)", required: ["물을", ["마셔요", "마셔"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)", required: ["책을", ["읽어요", "읽어"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>한국어, 공부하다</span>)", required: ["한국어를", ["공부해요", "공부해"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>친구, 만나다</span>)", required: ["친구를", ["만나요", "만나"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악을", ["들어요", "들어"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>사진, 보다</span>)", required: ["사진을", ["봐요", "봐"]] },
-            { q: "지금 뭐해요?<br>(제시어: <span class='target-word'>문, 열다</span>)", required: ["문을", ["열어요", "열어"]] }
-        ];
-        return templates.slice(0, count);
+    let stages = [];
+
+    function hideLoadOverlay() {
+        const overlay = document.getElementById('load-overlay');
+        if (overlay) overlay.classList.add('hidden');
     }
 
-    const stages = [
-        {
-            stage: "STAGE 1",
-            grammarTitle: "자기소개 및 직업 (이에요/예요)",
-            mascotSpeech: "자신을 자연스럽게 소개해보세요!",
-            hint: "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 '입니다' 사용 금지)",
-            questions: [
-                { q: "자기소개<br>(제시어: <span class='target-word'>네팔, 학생</span>)", required: ["네팔", "학생"] },
-                { q: "자기소개<br>(제시어: <span class='target-word'>베트남, 회사원</span>)", required: ["베트남", "회사원"] },
-                { q: "자기소개<br>(제시어: <span class='target-word'>미국, 대학생</span>)", required: ["미국", "대학생"] },
-                { q: "자기소개<br>(제시어: <span class='target-word'>일본, 경찰</span>)", required: ["일본", "경찰"] },
-                { q: "자기소개<br>(제시어: <span class='target-word'>우즈베키스탄, 선생님</span>)", required: ["우즈베키스탄", "선생님"] }
-            ]
-        },
-        {
-            stage: "STAGE 2",
-            grammarTitle: "긍정/부정 대답 및 지시사 (이/그/저)",
-            mascotSpeech: "선생님의 질문에 올바른 지시사를 써서 대답해봐요!",
-            hint: "<b>[보기]</b> 네, 이것은/그것은 N이에요/예요 또는 아니요, 저것은/그것은 N이/가 아니에요",
-            questions: [
-                { q: "선생님: '저것은 컴퓨터예요?'<br>(제시어: <span class='target-word'>아니요, 칠판</span>)", required: ["아니요", "저것은", "칠판"], type: "negative", qDemo: "저것은" },
-                { q: "선생님: '이것은 책상이에요?'<br>(제시어: <span class='target-word'>네, 책상</span>)", required: ["네", "책상"], type: "positive", qDemo: "이것은" },
-                { q: "선생님: '그것은 연필이에요?'<br>(제시어: <span class='target-word'>아니요, 볼펜</span>)", required: ["아니요", "이것은", "볼펜"], type: "negative", qDemo: "그것은" },
-                { q: "선생님: '저것은 공책이에요?'<br>(제시어: <span class='target-word'>네, 공책</span>)", required: ["네", "저것은", "공책"], type: "positive", qDemo: "저것은" },
-                { q: "선생님: '이것은 지우개예요?'<br>(제시어: <span class='target-word'>아니요, 필통</span>)", required: ["아니요", ["이것은", "그것은"], "필통"], type: "negative", qDemo: "이것은" },
-                { q: "선생님: '그것은 가방이에요?'<br>(제시어: <span class='target-word'>네, 가방</span>)", required: ["네", "이것은", "가방"], type: "positive", qDemo: "그것은" },
-                { q: "선생님: '저것은 시계예요?'<br>(제시어: <span class='target-word'>아니요, 달력</span>)", required: ["아니요", "저것은", "달력"], type: "negative", qDemo: "저것은" },
-                { q: "선생님: '이것은 창문이에요?'<br>(제시어: <span class='target-word'>네, 창문</span>)", required: ["네", "이것은", "창문"], type: "positive", qDemo: "이것은" }
-            ]
-        },
-        {
-            stage: "STAGE 3",
-            grammarTitle: "일상 행동 표현 (-을/를 V-아요/어요)",
-            mascotSpeech: "지금 무엇을 해요?",
-            hint: "<b>[보기]</b> N을/를 V-아요/어요 (받침 O: 을 / 받침 X:를 - 받침 있는/없는 명사 골고루 혼합)",
-            questions: [
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>한국어, 배우다</span>)", required: ["한국어를", "배워"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>커피, 마시다</span>)", required: ["커피를", "마셔"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)", required: ["책", ["읽어", "읽어요"]] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악을", "들어"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>사과, 사다</span>)", required: ["사과를", "사"], forbidden: ["사어요"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>냉면, 먹다</span>)", required: ["냉면을", "먹어"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>영화, 보다</span>)", required: ["영화를", "봐"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>숙제, 하다</span>)", required: ["숙제를", "해"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>축구, 하다</span>)", required: ["축구를", "해"] },
-                { q: "지금 무엇을 해요?<br>(제시어: <span class='target-word'>청소, 하다</span>)", required: ["청소를", "해"] }
-            ]
-        },
-        {
-            stage: "STAGE 3.5",
-            grammarTitle: "1~3단계 종합 복습 챌린지",
-            mascotSpeech: "개연성을 가진 대화를 이어가며 종합 회화를 연습해봐요!",
-            hint: "<b>[보기]</b> 자기소개 + 사물 부정/긍정 + 일상 행동 연결 회화",
-            questions: [
-                { q: "자기소개를 해보세요.<br>(제시어: <span class='target-word'>미국 사람, 대학생</span>)", required: ["미국", "대학생"] },
-                { q: "한국 생활을 말해보세요.<br>(제시어: <span class='target-word'>한국, 한국어 공부하다</span>)", required: ["한국", "공부해"] },
-                { q: "선생님: '저것은 텔레비전이에요?'<br>(제시어: <span class='target-word'>아니요, 컴퓨터</span>)", required: ["아니요", "컴퓨터"] },
-                { q: "선생님: '도서관에서 뭐해요?'<br>(제시어: <span class='target-word'>책, 빌리다</span>)", required: ["책", ["빌려", "빌려요"]] }
-            ]
-        },
-        {
-            stage: "STAGE 4",
-            grammarTitle: "'ㅂ' 불규칙 및 형용사/동사",
-            mascotSpeech: "상태(형용사)와 행동(동사)의 알맞은 조사를 써서 표현해봐요!",
-            hint: "<b>[보기]</b> 형용사(가벼워요, 추워요)는 '이/가' 사용, 타동사(잡다➔잡아요)는 '을/를' 사용",
-            questions: generateBTemplate(19)
-        },
-        {
-            stage: "STAGE 5",
-            grammarTitle: "장소 조사 (에 / 에서) 및 일상 묻고 답하기",
-            mascotSpeech: "장소와 일상 활동을 정확한 조사로 표현해봐요!",
-            hint: "<b>[보기]</b> 장소에(이동), 장소에서(행동)",
-            questions: [
-                { q: "책을 빌리러 어디에 가나요?<br>(제시어: <span class='target-word'>도서관, 가다</span>)", required: ["도서관", "가"], particleType: "에" },
-                { q: "책을 사러 어디에 가나요?<br>(제시어: <span class='target-word'>서점, 가다</span>)", required: ["서점", "가"], particleType: "에" },
-                { q: "점심을 먹으러 어디에 가나요?<br>(제시어: <span class='target-word'>식당, 가다</span>)", required: ["식당", "가"], particleType: "에" },
-                { q: "<b>어디에서 공부를 해요?</b><br>(제시어: <span class='target-word'>교실, 공부하다</span>)", required: ["교실", ["공부해요", "공부를 해요", "공부해"]], particleType: "에서" },
-                { q: "<b>어디에서 운동을 해요?</b><br>(제시어: <span class='target-word'>운동장, 운동하다</span>)", required: ["운동장", ["운동을 해요", "운동해요", "운동해"]], particleType: "에서" },
-                { q: "<b>옷을 어디에서 사요?</b><br>(제시어: <span class='target-word'>백화점, 사다</span>)", required: ["백화점", ["사요", "사"]], particleType: "에서" },
-                { q: "<b>카페에서 무엇을 해요?</b><br>(제시어: <span class='target-word'>커피, 마시다</span>)", required: ["커피", ["마셔요", "마셔", "마십니다"]], particleType: "에서" },
-                { q: "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>영화관, 영화, 보다</span>)", required: ["영화관", "영화", ["봐요", "봐", "봅니다"]], particleType: "에서" },
-                { q: "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>집, 잠, 자다</span>)", required: ["집", ["잠", "자다", "자", "자요"]], particleType: "에서" }
-            ]
-        },
-        {
-            stage: "STAGE 6",
-            grammarTitle: "위치 표현 (N에 있어요)",
-            mascotSpeech: "그림을 보고 사물이 어디에 있는지 위치어와 조사를 정확하게 말해봐요!",
-            hint: "<b>[보기]</b> 이미지를 보고 위치어와 <b>에 있어요</b>를 쓰세요. (제시어 없음)",
-            questions: [
-                { q: "<b>책은 어디에 있어요?</b>", required: [["책은", "최근", "책이"], "책상", "위", "에"], img: "classroom.jpg" },
-                { q: "<b>에어컨은 어디에 있어요?</b>", required: ["칠판", ["위", "옆", "상단"], "에"], img: "classroom.jpg" },
-                { q: "<b>나무가 어디에 있어요?</b>", required: ["창", "밖", "에"], img: "classroom.jpg" },
-                { q: "<b>고양이가 어디에 있어요?</b>", required: ["의자", ["아래", "밑"], "에"], img: "image_4eb870.jpg" },
-                { q: "<b>휴대폰이 어디에 있어요?</b>", required: ["가방", "안", "에"], img: "image_4eb8eb.jpg" },
-                { 
-                    q: "<b>지갑이 어디에 있어요?</b>", 
-                    required: [["가방과", "가방이랑", "가방하고"], "사이"], 
-                    forbidden: ["사이 에 있어요"],
-                    img: "image_4eb966.jpg" 
-                },
-                { q: "<b>친구가 어디에 있어요?</b>", required: ["문", "앞", "에"], img: "image_4ebc53.jpg" },
-                { q: "<b>우유가 어디에 있어요?</b>", required: ["냉장고", "안", "에"], img: "image_4ebccb.jpg" }
-            ]
-        },
-        {
-            stage: "STAGE 7",
-            grammarTitle: "시계 읽기, 가격 묻기 및 종합 챌린지",
-            mascotSpeech: "시계를 읽고, 가격과 위치, 생일을 자유롭게 대답해봐요!",
-            hint: "<b>[보기]</b> 이미지의 시각과 상황을 보고 올바른 문장으로 대답하세요. (6월은 '유월', 10월은 '시월' 주의!)",
-            questions: [
-                { q: "<b>생일이 언제예요?</b>", required: ["월", "일"], type: "birthday" },
-                { q: "<b>한국어 수업은 몇 시부터 몇 시까지 해요?</b>", required: ["아홉", "시", "십", "분", "한", "시", "부터", "까지"], img: "clock_class.png" },
-                { q: "<b>저녁을 언제 먹어요?</b><br>(제시어: <span class='target-word'>오후, 저녁을 먹다</span>)", required: [["오후 7시에", "오후 7시", "오후 일곱 시에", "오후 일곱 시"], ["저녁을 먹어요", "저녁을 먹어", "저녁을 먹", "밥을 먹어요", "밥을 먹어", "밥을 먹"]], img: "clock_dinner.png" },
-                { q: "<b>오늘 저녁에 약속이 있어요?</b><br>(제시어: <span class='target-word'>오후, 친구, 만나다</span>)", required: ["오후", "친구", "만나"], img: "clock_apt.png" },
-                { q: "<b>냉면이 얼마예요?</b><br>(제시어: <span class='target-word'>냉면이, 단위 N, 예요/이에요</span>)", required: [["만오천", "15000"], "원"], img: "image_5e96a4.png" },
-                { q: "<b>김밥이 한 줄에 얼마예요?</b><br>(제시어: <span class='target-word'>김밥이, 한 줄에, 예요/이에요</span>)", required: [["삼천오백", "삼천 오백", "3500"], "원"], img: "image_5e96a4.png" },
-                { 
-                    q: "<b>라면과 떡볶이를 먹고 싶어요. 얼마예요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와/과, 원이에요</span>)", 
-                    required: [
-                        ["라면", "떡볶이"],
-                        ["만원", "만 원", "10000", "일만"]
-                    ], 
-                    img: "image_5e96a4.png" 
-                },
-                { q: "<b>병원은 어디에 있어요?</b>", required: [["이 층", "2층", "이층"]], img: "building.jpg" },
-                { q: "<b>약국은 어디에 있어요?</b><br>(제시어: <span class='target-word'>1층, 편의점 옆</span>)", required: [["일 층", "1층", "일층"], ["편의점 옆", "옆"]], img: "building.jpg" },
-                { q: "<b>어디에 살아요?</b>", required: [["층"], ["살아", "살아요"]], img: "image_4eb4ef.jpg" }
-            ]
-        },
-        {
-            stage: "STAGE 8",
-            grammarTitle: "보너스 종합 챌린지",
-            mascotSpeech: "보너스 챌린지 문제들을 풀어봐요!",
-            hint: "<b>[보기]</b> 유학생 친구들의 다양한 일상 회화 표현",
-            questions: [
-                { q: "<b>이것은 누구의 열쇠예요?</b><br>(제시어: <span class='target-word'>무함마사이드</span>)", required: ["무함마사이드", "열쇠"] },
-                { q: "<b>난딘체첵, 손을 어디에서 씻어요?</b><br>(제시어: <span class='target-word'>화장실</span>)", required: ["화장실", "씻어"] },
-                { q: "<b>누가 비케시예요?</b>", required: [["제가 비켓이에요", "제가 비케시예요"]], forbidden: ["저는"] },
-                { q: "<b>사미르, 김치가 맛있어요?</b>", required: [["네, 김치가 맛있어요", "아니요, 김치는 맛없어요", "맛있어요", "맛없어요"]] },
-                { q: "<b>커머라, 누구랑 손을 잡아요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과) 함께, 소스티카</span>)", required: ["소스티카", ["랑", "하고", "와", "과", "함께"]] },
-                { q: "<b>융, 편의점에서 무엇을 사요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과), 콜라, 김밥</span>)", required: [["콜라", "김밥"], ["사요", "사"]] },
-                { q: "<b>마디나 씨, 어디에 다녀요?</b><br>(제시어: <span class='target-word'>학교</span>)", required: ["학교", "다녀"] },
-                { q: "<b>티웬, 누구랑 점심을 먹어요?</b><br>(제시어: <span class='target-word'>엘백, 로젼, 사와드</span>)", required: [["엘백", "로젼", "사와드"], ["점심", "먹"]] },
-                { q: "<b>푹히엡은 누구와 같이 커피를 마셔요?</b><br>(제시어: <span class='target-word'>아인, 린</span>)", required: [["아인", "린"], ["커피", "마셔"]] },
-                { q: "<b>힘살리, 필통 안에 지우개가 있어요?</b>", required: [["네, 제 필통 안에 지우개가 있어요", "네, 필통 안에 지우개가 있어요", "아니요, 필통 안에 지우개가 없어요", "아니요, 제 필통 안에 지우개가 없어요", "있어", "없어"]] },
-                { q: "<b>나키샤, 목요일에 학교에 가요?</b><br>(제시어: <span class='target-word'>네</span>)", required: ["네", "목요일", "학교", "가"] },
-                { q: "<b>라흐마툴로, 생일에 무엇을 해요?</b><br>(제시어: <span class='target-word'>친구들, (이)랑/하고/(와)과, 파티</span>)", required: ["친구", "파티"] },
-                { q: "<b>압둘라술벡, 심심할 때 무엇을 해요?</b><br>(제시어: <span class='target-word'>음악, 듣다</span>)", required: ["음악", "들어"] }
-            ]
+    function showLoadOverlay(title, message) {
+        const overlay = document.getElementById('load-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('hidden');
+        overlay.querySelector('h3').innerText = title;
+        overlay.querySelector('p').innerHTML = message;
+    }
+
+    async function loadStages() {
+        try {
+            const local = localStorage.getItem('koreanQuestQuestions');
+            if (local) {
+                stages = JSON.parse(local);
+                const banner = document.getElementById('preview-banner');
+                if (banner) banner.style.display = 'block';
+            } else {
+                const res = await fetch('questions.json?t=' + Date.now());
+                if (!res.ok) throw new Error('questions.json 로드 실패');
+                stages = await res.json();
+            }
+            if (!Array.isArray(stages) || stages.length === 0) throw new Error('문제 데이터가 비어 있습니다');
+            hideLoadOverlay();
+            initSpeechRecognition();
+            updateStageUI();
+        } catch (e) {
+            console.error(e);
+            showLoadOverlay('문제를 불러오지 못했어요', '인터넷 연결을 확인한 뒤 새로고침 해주세요.');
         }
-    ];
+    }
 
     let currentStageIndex = 0;
     let currentQIndex = 0;
@@ -866,7 +758,68 @@
     let finalTranscript = '';
     let isAnswerProcessing = false;
 
+    function isIOSDevice() {
+        const ua = navigator.userAgent || '';
+        return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isSafariBrowser() {
+        const ua = navigator.userAgent || '';
+        return /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua);
+    }
+
+    function shouldUseWhisper() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return true;
+        return isIOSDevice() || isSafariBrowser();
+    }
+
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let audioStream = null;
+    let whisperTranscriber = null;
+    let whisperLoading = null;
+
+    function pickRecorderMime() {
+        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
+        if (typeof MediaRecorder === 'undefined') return '';
+        return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+    }
+
+    async function getWhisperTranscriber(statusEl) {
+        if (whisperTranscriber) return whisperTranscriber;
+        if (whisperLoading) return whisperLoading;
+        whisperLoading = (async () => {
+            if (statusEl) statusEl.innerText = '음성 모델을 준비하는 중... 처음 한 번만 조금 걸려요.';
+            const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+            env.allowLocalModels = false;
+            env.useBrowserCache = true;
+            whisperTranscriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
+                progress_callback: (data) => {
+                    if (!statusEl || !data) return;
+                    if (data.status === 'progress' && data.total) {
+                        const pct = Math.round((data.loaded / data.total) * 100);
+                        statusEl.innerText = `음성 모델 받는 중... ${pct}%`;
+                    } else if (data.status === 'ready') {
+                        statusEl.innerText = '음성 모델 준비 완료. 이제 말해 주세요!';
+                    }
+                }
+            });
+            return whisperTranscriber;
+        })();
+        try {
+            return await whisperLoading;
+        } catch (e) {
+            whisperLoading = null;
+            throw e;
+        }
+    }
+
     function initSpeechRecognition() {
+        if (shouldUseWhisper()) {
+            recognition = null;
+            return;
+        }
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return;
         try {
@@ -904,6 +857,10 @@
     }
 
     function toggleRecord() {
+        if (shouldUseWhisper()) {
+            toggleWhisperRecord();
+            return;
+        }
         if (!recognition) {
             initSpeechRecognition();
         }
@@ -929,11 +886,6 @@
                 micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
             } catch (e) {
                 console.error("음성 인식 시작 실패:", e);
-
-                // 첫 문제를 끝낸 직후에는 이전 음성 인식 세션의 onend가
-                // 완전히 끝나기 전에 다음 문제의 녹음 버튼을 누를 수 있습니다.
-                // 이때 Chrome이 InvalidStateError를 내면서 기존 코드가 팝업을 띄웠습니다.
-                // 팝업 대신 인식 객체를 새로 준비한 뒤 잠시 후 다시 시작합니다.
                 isRecording = false;
                 btn.classList.remove('recording');
                 btn.innerHTML = '🎤 음성 녹음 시작';
@@ -969,10 +921,88 @@
         }
     }
 
+    async function toggleWhisperRecord() {
+        const btn = document.getElementById('record-btn');
+        const micStatus = document.getElementById('mic-status');
+        if (isRecording) {
+            await stopWhisperRecord();
+            return;
+        }
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedChunks = [];
+            const mimeType = pickRecorderMime();
+            mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            btn.classList.add('recording');
+            btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+            micStatus.innerText = '🔴 듣는 중... 말한 뒤 버튼을 다시 눌러 주세요.';
+        } catch (e) {
+            console.error(e);
+            micStatus.innerText = '마이크 권한이 필요해요. 설정에서 마이크를 허용해 주세요.';
+            isRecording = false;
+            btn.classList.remove('recording');
+            btn.innerHTML = '🎤 음성 녹음 시작';
+        }
+    }
+
+    async function stopWhisperRecord() {
+        const btn = document.getElementById('record-btn');
+        const micStatus = document.getElementById('mic-status');
+        isRecording = false;
+        btn.classList.remove('recording');
+        btn.innerHTML = '🎤 음성 녹음 시작';
+        if (!mediaRecorder) {
+            if (micStatus) micStatus.innerText = '대기 중';
+            return;
+        }
+        const blob = await new Promise((resolve) => {
+            mediaRecorder.onstop = () => {
+                resolve(new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' }));
+            };
+            try { mediaRecorder.stop(); } catch (e) { resolve(null); }
+        });
+        if (audioStream) {
+            audioStream.getTracks().forEach(track => track.stop());
+            audioStream = null;
+        }
+        mediaRecorder = null;
+        if (!blob || blob.size < 500) {
+            if (micStatus) micStatus.innerText = '말이 잘 들리지 않았어요. 다시 녹음해 주세요.';
+            return;
+        }
+        try {
+            const transcriber = await getWhisperTranscriber(micStatus);
+            if (micStatus) micStatus.innerText = '알아듣는 중...';
+            const url = URL.createObjectURL(blob);
+            const result = await transcriber(url, { language: 'korean', task: 'transcribe' });
+            URL.revokeObjectURL(url);
+            const text = (result && result.text ? result.text : '').replace(/[?？?]/g, '').trim();
+            const input = document.getElementById('user-input');
+            if (text) {
+                input.value = input.value ? (input.value.trim() + ' ' + text) : text;
+                if (micStatus) micStatus.innerText = '대기 중';
+            } else if (micStatus) {
+                micStatus.innerText = '글자로 바꾸지 못했어요. 다시 말해 보거나 직접 입력해 주세요.';
+            }
+        } catch (e) {
+            console.error(e);
+            if (micStatus) micStatus.innerText = '아이폰 음성 인식을 준비하지 못했어요. 직접 입력해 주세요.';
+        }
+    }
+
     function stopRecordUI() {
         isRecording = false;
         if (recognition) {
             try { recognition.stop(); } catch(e){}
+        }
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            stopWhisperRecord();
+            return;
         }
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
@@ -1219,7 +1249,7 @@
 
         if (currentQ.particleType && !inputVal.includes(currentQ.particleType)) {
             matched = false;
-            customErrorMsg = `장소에 맞는 '${'${currentQ.particleType}'}' 조사를 사용해 주세요.`;
+            customErrorMsg = `장소에 맞는 '${currentQ.particleType}' 조사를 사용해 주세요.`;
         }
 
         if (currentQ.forbidden && currentQ.forbidden.some(f => inputVal.includes(f))) {
@@ -1486,8 +1516,7 @@
         animate();
     }
 
-    initSpeechRecognition();
-    updateStageUI();
+    loadStages();
 </script>
 
 </body>
