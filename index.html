@@ -974,10 +974,6 @@
         return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
     }
 
-    function useSafariSpeechMode() {
-        return isIOSDevice() || isSafariBrowser();
-    }
-
     function shouldUseServerStt() {
         return !hasBrowserSpeechRecognition();
     }
@@ -1029,70 +1025,87 @@
     function speechStatusFromInput() {
         const input = document.getElementById('user-input');
         const text = input ? input.value.trim() : '';
-        return text ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.';
+        return text ? '녹음 완료 · 정답 확인을 눌러주세요' : '대기 중';
+    }
+
+    function applySpeechResult(event) {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const text = event.results[i][0].transcript || '';
+            if (event.results[i].isFinal) {
+                finalTranscript += text + ' ';
+            } else {
+                interimTranscript += text;
+            }
+        }
+        const cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
+        const input = document.getElementById('user-input');
+        if (input) input.value = cleanText;
+        if (cleanText && !isRecording) {
+            finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
+        }
+        return cleanText;
     }
 
     function finishSpeechSession(statusText) {
         clearSpeechFinalizeTimer();
         isRecording = false;
         isSpeechFinalizing = false;
-        recognition = null;
         setRecordReadyUI(statusText || speechStatusFromInput());
         setSubmitEnabled(true);
     }
 
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return null;
+        if (!SpeechRecognition) {
+            recognition = null;
+            return;
+        }
 
         try {
-            const rec = new SpeechRecognition();
-            rec.lang = 'ko-KR';
-            rec.continuous = !useSafariSpeechMode();
-            rec.interimResults = true;
-            rec.maxAlternatives = 1;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
 
-            rec.onresult = function(event) {
-                if (recognition !== rec) return;
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const text = event.results[i][0].transcript || '';
-                    if (event.results[i].isFinal) {
-                        finalTranscript += text + ' ';
-                    } else {
-                        interimTranscript += text;
+            recognition.onresult = function(event) {
+                applySpeechResult(event);
+            };
+
+            recognition.onend = function() {
+                if (isRecording) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        finishSpeechSession(speechStatusFromInput());
+                    }
+                    return;
+                }
+                if (isSpeechFinalizing) {
+                    const input = document.getElementById('user-input');
+                    const text = input ? input.value.trim() : '';
+                    if (text) {
+                        finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
                     }
                 }
-                const cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
-                document.getElementById('user-input').value = cleanText;
             };
 
-            rec.onend = function() {
-                if (recognition && recognition !== rec) return;
-                finishSpeechSession();
-            };
-
-            rec.onerror = function(event) {
-                if (recognition && recognition !== rec) return;
-                if (event.error === 'aborted') {
-                    isRecording = false;
-                    isSpeechFinalizing = true;
+            recognition.onerror = function(event) {
+                if (event.error === 'aborted' || event.error === 'no-speech') {
                     return;
                 }
                 console.error("음성 인식 오류:", event.error);
                 const messages = {
                     'not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
                     'service-not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
-                    'audio-capture': '마이크를 찾을 수 없습니다. 연결을 확인해 주세요.',
-                    'no-speech': '음성이 들리지 않았어요. 다시 또렷하게 말해 주세요.'
+                    'audio-capture': '마이크를 찾을 수 없습니다. 연결을 확인해 주세요.'
                 };
                 finishSpeechSession(messages[event.error] || '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
             };
-
-            return rec;
         } catch (e) {
             console.error("음성 인식 초기화 실패:", e);
-            return null;
+            recognition = null;
         }
     }
 
@@ -1124,11 +1137,6 @@
         const micStatus = document.getElementById('mic-status');
         const input = document.getElementById('user-input');
 
-        if (isSpeechFinalizing) {
-            finishSpeechSession();
-            return;
-        }
-
         if (mediaRecorder && (isRecording || mediaRecorder.state === 'recording')) {
             toggleServerRecord();
             return;
@@ -1139,51 +1147,44 @@
             return;
         }
 
-        if (!isRecording) {
-            recognition = initSpeechRecognition();
-            if (!recognition) {
-                toggleServerRecord();
-                return;
-            }
+        if (isSpeechFinalizing) {
+            clearSpeechFinalizeTimer();
+            isSpeechFinalizing = false;
+        }
 
+        if (!recognition) {
+            initSpeechRecognition();
+        }
+        if (!recognition) {
+            toggleServerRecord();
+            return;
+        }
+
+        if (!isRecording) {
             finalTranscript = input && input.value.trim() ? input.value.trim() + ' ' : '';
-            isRecording = true;
             isSpeechFinalizing = false;
             setSubmitEnabled(false);
             btn.classList.add('recording');
             btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
             micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
-
-            recognition.onstart = function() {
-                isRecording = true;
-                btn.classList.add('recording');
-                btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-                micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
-            };
+            isRecording = true;
 
             try {
                 recognition.start();
             } catch (e) {
                 console.error("음성 인식 시작 실패:", e);
                 isRecording = false;
-                isSpeechFinalizing = false;
                 try { recognition.abort(); } catch (abortError) {}
                 recognition = null;
                 setRecordReadyUI('음성 인식을 다시 준비하고 있어요...');
                 setTimeout(function() {
-                    recognition = initSpeechRecognition();
+                    initSpeechRecognition();
                     if (!recognition) {
                         toggleServerRecord();
                         return;
                     }
                     isRecording = true;
                     setSubmitEnabled(false);
-                    recognition.onstart = function() {
-                        isRecording = true;
-                        btn.classList.add('recording');
-                        btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-                        micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
-                    };
                     try {
                         recognition.start();
                         btn.classList.add('recording');
@@ -1192,7 +1193,6 @@
                     } catch (retryError) {
                         console.error("음성 인식 재시작 실패:", retryError);
                         isRecording = false;
-                        isSpeechFinalizing = false;
                         recognition = null;
                         setRecordReadyUI('음성 인식을 시작할 수 없습니다. 다시 눌러 주세요.');
                         setSubmitEnabled(true);
@@ -1296,37 +1296,40 @@
             return;
         }
 
-        if (!recognition) {
-            isRecording = false;
-            isSpeechFinalizing = false;
-            setRecordReadyUI('대기 중');
-            setSubmitEnabled(true);
-            return;
-        }
-
         isRecording = false;
         isSpeechFinalizing = true;
 
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
+        const input = document.getElementById('user-input');
+        const text = input ? input.value.trim() : '';
+
         if (btn) {
             btn.classList.remove('recording');
-            btn.innerHTML = '⏳ 녹음 마무리 중...';
+            btn.innerHTML = '🎤 음성 녹음 시작';
         }
-        if (micStatus) micStatus.innerText = '음성 결과를 확인하고 있어요...';
-        setSubmitEnabled(false);
 
-        try {
-            recognition.stop();
-        } catch (e) {
-            console.warn("음성 인식 종료 중:", e);
-            finishSpeechSession();
+        if (text) {
+            if (recognition) {
+                try { recognition.stop(); } catch (e) {}
+            }
+            finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
             return;
         }
 
+        if (micStatus) micStatus.innerText = '음성 결과를 확인하고 있어요...';
+        setSubmitEnabled(true);
+
+        if (recognition) {
+            try { recognition.stop(); } catch (e) {}
+        }
+
+        clearSpeechFinalizeTimer();
         speechFinalizeTimer = setTimeout(function() {
-            finishSpeechSession();
-        }, 1200);
+            const later = document.getElementById('user-input');
+            const laterText = later ? later.value.trim() : '';
+            finishSpeechSession(laterText ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.');
+        }, 2000);
     }
 
     function openStageSelect() {
