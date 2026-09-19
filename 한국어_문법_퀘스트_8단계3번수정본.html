@@ -475,6 +475,15 @@
                 font-size: 0.82rem;
             }
 
+            .btn-home {
+                min-height: 42px;
+                padding: 7px 10px;
+                font-size: 0.82rem;
+            }
+
+            .home-hero h1 { font-size: 1.45rem; }
+            .home-card { padding: 18px 14px 14px; }
+
             .progress-panel {
                 padding: 8px 12px 7px;
             }
@@ -591,6 +600,114 @@
         .load-overlay.hidden { display: none; }
         .load-overlay h3 { margin: 0; font-size: 1.1rem; }
         .load-overlay p { margin: 0; color: #64748B; font-size: 0.85rem; line-height: 1.4; }
+
+        .home-screen {
+            position: absolute;
+            inset: 0;
+            z-index: 110;
+            background: linear-gradient(180deg, #6366F1 0%, #A855F7 42%, #FDF4FF 42%, #FFFFFF 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 22px 24px;
+        }
+
+        .home-screen.hidden { display: none; }
+
+        .home-hero {
+            color: white;
+            text-align: center;
+            padding: 12px 8px 8px;
+        }
+
+        .home-kicker {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            margin-bottom: 10px;
+        }
+
+        .home-hero h1 {
+            margin: 0;
+            font-size: 1.7rem;
+            line-height: 1.25;
+        }
+
+        .home-hero p {
+            margin: 8px 0 0;
+            font-size: 0.92rem;
+            opacity: 0.92;
+        }
+
+        .home-card {
+            margin-top: auto;
+            background: white;
+            border-radius: 28px;
+            padding: 22px 18px 18px;
+            box-shadow: 0 16px 32px rgba(99, 102, 241, 0.16);
+            text-align: center;
+        }
+
+        .home-mascot {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: -62px auto 10px;
+            border: 4px solid white;
+            background: #EEF2FF;
+            box-shadow: 0 8px 18px rgba(99, 102, 241, 0.2);
+        }
+
+        .home-tips {
+            text-align: left;
+            background: #F8FAFC;
+            border-radius: 16px;
+            padding: 12px 14px;
+            color: #475569;
+            font-size: 0.86rem;
+            line-height: 1.55;
+            margin: 8px 0 16px;
+        }
+
+        .home-start {
+            width: 100%;
+            border: 0;
+            border-radius: 16px;
+            padding: 14px 12px;
+            font-family: inherit;
+            font-size: 1.08rem;
+            font-weight: bold;
+            color: white;
+            background: var(--primary-gradient);
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(99, 102, 241, 0.28);
+        }
+
+        .home-secondary {
+            width: 100%;
+            margin-top: 8px;
+            border: 0;
+            border-radius: 16px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: #EEF2FF;
+            color: #4338CA;
+            cursor: pointer;
+        }
+
+        .btn-home {
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -602,6 +719,24 @@
         <p>잠시만 기다려 주세요.</p>
     </div>
     <div class="preview-banner" id="preview-banner">선생님 미리보기 데이터를 사용 중입니다.</div>
+
+    <div class="home-screen" id="home-screen">
+        <div class="home-hero">
+            <div class="home-kicker">말하면서 배우는 교실</div>
+            <h1>한국어 문법 퀘스트</h1>
+            <p>인사부터 보너스 챌린지까지<br>말로 답을 만들어 보세요</p>
+        </div>
+        <div class="home-card">
+            <img src="hint.png" alt="마스코트" class="home-mascot" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'84\' height=\'84\'><circle cx=\'42\' cy=\'42\' r=\'42\' fill=\'%236366F1\'/><text x=\'42\' y=\'52\' font-size=\'32\' text-anchor=\'middle\' fill=\'white\'>👦</text></svg>'">
+            <div class="home-tips">
+                🎤 음성으로 말하거나 직접 입력할 수 있어요.<br>
+                📱 안드로이드 Chrome에서 음성 인식이 가장 잘 돼요.<br>
+                🗺️ 원하는 단계만 골라서 연습할 수도 있어요.
+            </div>
+            <button class="home-start" onclick="startGame()">시작하기 🚀</button>
+            <button class="home-secondary" onclick="startFromStageSelect()">단계 선택하고 시작</button>
+        </div>
+    </div>
 
     <!-- 스테이지 클리어 피드백 팝업 모달 -->
     <div class="modal-overlay" id="clear-modal">
@@ -636,6 +771,7 @@
     <!-- 상단 상태 바 -->
     <div class="status-bar">
         <div class="status-left">
+            <button class="btn-home" onclick="goHome()">홈</button>
             <span id="stage-indicator" class="stage-badge">STAGE 1 (시작 인사)</span>
             <button class="btn-stage-select" onclick="openStageSelect()">단계 선택 🗺️</button>
         </div>
@@ -733,11 +869,57 @@
             if (!Array.isArray(stages) || stages.length === 0) throw new Error('문제 데이터가 비어 있습니다');
             hideLoadOverlay();
             initSpeechRecognition();
-            updateStageUI();
+            showHome();
         } catch (e) {
             console.error(e);
             showLoadOverlay('문제를 불러오지 못했어요', '인터넷 연결을 확인한 뒤 새로고침 해주세요.');
         }
+    }
+
+    function showHome() {
+        const home = document.getElementById('home-screen');
+        if (home) home.classList.remove('hidden');
+        document.getElementById('clear-modal').style.display = 'none';
+        document.getElementById('stage-select-modal').style.display = 'none';
+        if (typeof stopRecordUI === 'function') stopRecordUI();
+    }
+
+    function resetPlayState(startIndex) {
+        currentStageIndex = startIndex || 0;
+        currentQIndex = 0;
+        isGreetingStep = (currentStageIndex === 0);
+        score = 0;
+        stageScore = 0;
+        stageResults = [];
+        firstRoundClearCount = 0;
+        retrySuccessCount = 0;
+        unresolvedCount = 0;
+        wrongAttempts = 0;
+        currentStageWrongQueue = [];
+        isRetryMode = false;
+        retryAttemptCount = 0;
+        finalTranscript = '';
+        isAnswerProcessing = false;
+        const scoreEl = document.getElementById('score');
+        if (scoreEl) scoreEl.innerText = '⭐ 0점';
+    }
+
+    function startGame(startIndex) {
+        const home = document.getElementById('home-screen');
+        if (home) home.classList.add('hidden');
+        resetPlayState(startIndex);
+        updateStageUI();
+    }
+
+    function startFromStageSelect() {
+        startGame(0);
+        openStageSelect();
+    }
+
+    function goHome() {
+        resetPlayState(0);
+        updateStageUI();
+        showHome();
     }
 
     let currentStageIndex = 0;
@@ -914,6 +1096,8 @@
     }
 
     function jumpToStage(idx) {
+        const home = document.getElementById('home-screen');
+        if (home) home.classList.add('hidden');
         closeStageSelect();
         currentStageIndex = idx;
         currentQIndex = 0;
@@ -1326,10 +1510,8 @@
         currentStageIndex++;
         if (currentStageIndex >= stages.length) {
             alert("🏆 축하합니다! 모든 1~8단계 대장정을 완벽하게 클리어했습니다!");
-            currentStageIndex = 0;
-            isGreetingStep = true;
-            score = 0;
-            stageScore = 0;
+            goHome();
+            return;
         }
 
         currentQIndex = 0;
