@@ -434,6 +434,7 @@
             z-index: 99;
             display: none;
         }
+
         /* 휴대폰용 최적화 */
         @media (max-width: 600px) {
             html, body {
@@ -562,7 +563,6 @@
             .visual-container { height: 125px; min-height: 125px; }
             .visual-container img { height: 115px; }
         }
-
     </style>
 </head>
 <body>
@@ -624,7 +624,7 @@
 
     <!-- 캐릭터 & 말풍선 -->
     <div class="character-section">
-        <img src="data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20rx%3D%2260%22%20fill%3D%22%236366f1%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2248%22%20r%3D%2228%22%20fill%3D%22%23ffd166%22%2F%3E%3Cpath%20d%3D%22M36%2042%20Q60%2018%2084%2042%22%20fill%3D%22%23222%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2248%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2248%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M50%2061%20Q60%2069%2070%2061%22%20fill%3D%22none%22%20stroke%3D%22%23333%22%20stroke-width%3D%223%22%2F%3E%3C%2Fsvg%3E" alt="마스코트" class="mascot-img" id="mascot-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\'><circle cx=\'30\' cy=\'30\' r=\'30\' fill=\'%236366F1\'/><text x=\'30\' y=\'38\' font-size=\'24\' text-anchor=\'middle\' fill=\'white\'>👦</text></svg>'">
+        <img src="hint.png" alt="마스코트" class="mascot-img" id="mascot-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\'><circle cx=\'30\' cy=\'30\' r=\'30\' fill=\'%236366F1\'/><text x=\'30\' y=\'38\' font-size=\'24\' text-anchor=\'middle\' fill=\'white\'>👦</text></svg>'">
         <div class="speech-bubble" id="mascot-speech">
             안녕하세요? 처음 뵙겠습니다.
         </div>
@@ -848,29 +848,6 @@
         }
     ];
 
-
-    const ASSET_IMAGES = {
-        'hint.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20rx%3D%2260%22%20fill%3D%22%236366f1%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2248%22%20r%3D%2228%22%20fill%3D%22%23ffd166%22%2F%3E%3Cpath%20d%3D%22M36%2042%20Q60%2018%2084%2042%22%20fill%3D%22%23222%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2248%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2248%22%20r%3D%223%22%2F%3E%3Cpath%20d%3D%22M50%2061%20Q60%2069%2070%2061%22%20fill%3D%22none%22%20stroke%3D%22%23333%22%20stroke-width%3D%223%22%2F%3E%3C%2Fsvg%3E',
-        'success.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%3E%3Crect%20width%3D%22120%22%20height%3D%22120%22%20rx%3D%2260%22%20fill%3D%22%238b5cf6%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2238%22%20fill%3D%22%23ffd166%22%2F%3E%3Cpath%20d%3D%22M43%2060%20l11%2011%2024-28%22%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E',
-        'classroom.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23eef2ff%22%2F%3E%3Crect%20x%3D%2290%22%20y%3D%2245%22%20width%3D%22360%22%20height%3D%22145%22%20rx%3D%228%22%20fill%3D%22%23244%22%2F%3E%3Ctext%20x%3D%22270%22%20y%3D%22125%22%20text-anchor%3D%22middle%22%20font-size%3D%2228%22%20fill%3D%22white%22%3E%ED%95%9C%EA%B5%AD%EC%96%B4%20%EC%88%98%EC%97%85%3C%2Ftext%3E%3Crect%20x%3D%22505%22%20y%3D%2255%22%20width%3D%22120%22%20height%3D%2255%22%20rx%3D%228%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%22565%22%20y%3D%2289%22%20text-anchor%3D%22middle%22%20font-size%3D%2218%22%3E%EC%97%90%EC%96%B4%EC%BB%A8%3C%2Ftext%3E%3Crect%20x%3D%22120%22%20y%3D%22245%22%20width%3D%22170%22%20height%3D%2255%22%20fill%3D%22%23b87945%22%2F%3E%3Crect%20x%3D%22160%22%20y%3D%22210%22%20width%3D%2290%22%20height%3D%2235%22%20fill%3D%22%23f8fafc%22%2F%3E%3Ctext%20x%3D%22205%22%20y%3D%22234%22%20text-anchor%3D%22middle%22%20font-size%3D%2218%22%3E%EC%B1%85%3C%2Ftext%3E%3Cpath%20d%3D%22M560%20270%20Q590%20205%20620%20270%22%20fill%3D%22none%22%20stroke%3D%22%234a7%22%20stroke-width%3D%2220%22%2F%3E%3Cpath%20d%3D%22M540%20270%20H640%22%20stroke%3D%22%23754%22%20stroke-width%3D%2210%22%2F%3E%3C%2Fsvg%3E',
-        'image_4eb870.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23fff7ed%22%2F%3E%3Crect%20x%3D%22250%22%20y%3D%2270%22%20width%3D%22200%22%20height%3D%2245%22%20fill%3D%22%23a87950%22%2F%3E%3Crect%20x%3D%22275%22%20y%3D%22115%22%20width%3D%2235%22%20height%3D%22155%22%20fill%3D%22%238b5e3c%22%2F%3E%3Crect%20x%3D%22390%22%20y%3D%22115%22%20width%3D%2235%22%20height%3D%22155%22%20fill%3D%22%238b5e3c%22%2F%3E%3Crect%20x%3D%22220%22%20y%3D%22265%22%20width%3D%22260%22%20height%3D%2228%22%20fill%3D%22%238b5e3c%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22305%22%20r%3D%2225%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%22342%22%20cy%3D%22300%22%20r%3D%223%22%2F%3E%3Ccircle%20cx%3D%22358%22%20cy%3D%22300%22%20r%3D%223%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22345%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EC%9D%98%EC%9E%90%20%EC%95%84%EB%9E%98%20%EA%B3%A0%EC%96%91%EC%9D%B4%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_4eb8eb.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23eff6ff%22%2F%3E%3Cpath%20d%3D%22M220%2085%20Q350%2045%20480%2085%20L455%20290%20Q350%20325%20245%20290Z%22%20fill%3D%22%232563eb%22%2F%3E%3Cpath%20d%3D%22M250%20105%20Q350%2075%20450%20105%22%20fill%3D%22none%22%20stroke%3D%22%2393c5fd%22%20stroke-width%3D%2212%22%2F%3E%3Crect%20x%3D%22300%22%20y%3D%22130%22%20width%3D%22100%22%20height%3D%22145%22%20rx%3D%2215%22%20fill%3D%22%23222%22%2F%3E%3Crect%20x%3D%22310%22%20y%3D%22145%22%20width%3D%2280%22%20height%3D%22105%22%20rx%3D%228%22%20fill%3D%22%2360a5fa%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22340%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EA%B0%80%EB%B0%A9%20%EC%95%88%20%ED%9C%B4%EB%8C%80%ED%8F%B0%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_4eb966.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23f8fafc%22%2F%3E%3Crect%20x%3D%22110%22%20y%3D%22110%22%20width%3D%22190%22%20height%3D%22150%22%20rx%3D%2218%22%20fill%3D%22%23ef4444%22%2F%3E%3Crect%20x%3D%22400%22%20y%3D%22110%22%20width%3D%22190%22%20height%3D%22150%22%20rx%3D%2218%22%20fill%3D%22%233b82f6%22%2F%3E%3Crect%20x%3D%22330%22%20y%3D%22185%22%20width%3D%2245%22%20height%3D%2270%22%20rx%3D%228%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22320%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EA%B0%80%EB%B0%A9%EA%B3%BC%20%EA%B0%80%EB%B0%A9%20%EC%82%AC%EC%9D%B4%20%EC%A7%80%EA%B0%91%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_4ebc53.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23fef3c7%22%2F%3E%3Crect%20x%3D%22245%22%20y%3D%2255%22%20width%3D%22210%22%20height%3D%22250%22%20fill%3D%22%2392400e%22%2F%3E%3Crect%20x%3D%22275%22%20y%3D%2285%22%20width%3D%22150%22%20height%3D%22190%22%20fill%3D%22%23fef3c7%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22175%22%20r%3D%2248%22%20fill%3D%22%23ffd166%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22335%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EB%AC%B8%20%EC%95%9E%EC%97%90%20%EC%B9%9C%EA%B5%AC%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_4ebccb.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23ecfeff%22%2F%3E%3Crect%20x%3D%22210%22%20y%3D%2245%22%20width%3D%22280%22%20height%3D%22270%22%20rx%3D%2218%22%20fill%3D%22%23cbd5e1%22%2F%3E%3Crect%20x%3D%22235%22%20y%3D%2275%22%20width%3D%22230%22%20height%3D%22210%22%20rx%3D%2210%22%20fill%3D%22%23e0f2fe%22%2F%3E%3Crect%20x%3D%22300%22%20y%3D%22145%22%20width%3D%22100%22%20height%3D%2290%22%20rx%3D%2220%22%20fill%3D%22%23fff%22%2F%3E%3Crect%20x%3D%22315%22%20y%3D%22165%22%20width%3D%2270%22%20height%3D%2212%22%20fill%3D%22%23bae6fd%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22340%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EB%83%89%EC%9E%A5%EA%B3%A0%20%EC%95%88%20%EC%9A%B0%EC%9C%A0%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_4eb4ef.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23f3e8ff%22%2F%3E%3Crect%20x%3D%22180%22%20y%3D%22120%22%20width%3D%22340%22%20height%3D%22170%22%20rx%3D%2210%22%20fill%3D%22%23a78bfa%22%2F%3E%3Cpath%20d%3D%22M170%20120%20L350%2055%20L530%20120%22%20fill%3D%22%238b5cf6%22%2F%3E%3Crect%20x%3D%22220%22%20y%3D%22170%22%20width%3D%22100%22%20height%3D%22120%22%20fill%3D%22%23ddd6fe%22%2F%3E%3Crect%20x%3D%22380%22%20y%3D%22170%22%20width%3D%22100%22%20height%3D%22120%22%20fill%3D%22%23ddd6fe%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22335%22%20text-anchor%3D%22middle%22%20font-size%3D%2222%22%3E%EC%95%84%ED%8C%8C%ED%8A%B8%EC%97%90%20%EC%82%B4%EC%95%84%EC%9A%94%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'clock_class.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23f8fafc%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22175%22%20r%3D%22105%22%20fill%3D%22white%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22175%22%20x2%3D%22350%22%20y2%3D%22105%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22175%22%20x2%3D%22395%22%20y2%3D%22175%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22325%22%20text-anchor%3D%22middle%22%20font-size%3D%2224%22%3E9%EC%8B%9C%2010%EB%B6%84%20%E2%86%92%201%EC%8B%9C%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'clock_dinner.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23fff7ed%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22160%22%20r%3D%22105%22%20fill%3D%22white%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22160%22%20x2%3D%22350%22%20y2%3D%2295%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22160%22%20x2%3D%22410%22%20y2%3D%22160%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22160%22%20r%3D%228%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22325%22%20text-anchor%3D%22middle%22%20font-size%3D%2226%22%3E%EC%98%A4%ED%9B%84%207%EC%8B%9C%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'clock_apt.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23eff6ff%22%2F%3E%3Ccircle%20cx%3D%22350%22%20cy%3D%22160%22%20r%3D%22105%22%20fill%3D%22white%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22160%22%20x2%3D%22350%22%20y2%3D%2290%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Cline%20x1%3D%22350%22%20y1%3D%22160%22%20x2%3D%22305%22%20y2%3D%22190%22%20stroke%3D%22%23333%22%20stroke-width%3D%228%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22325%22%20text-anchor%3D%22middle%22%20font-size%3D%2224%22%3E%EC%95%BD%EC%86%8D%20%EC%8B%9C%EA%B0%84%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'image_5e96a4.png': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23fff%22%2F%3E%3Crect%20x%3D%22110%22%20y%3D%2255%22%20width%3D%22480%22%20height%3D%22250%22%20rx%3D%2210%22%20fill%3D%22%23fef3c7%22%20stroke%3D%22%2392400e%22%20stroke-width%3D%224%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22105%22%20text-anchor%3D%22middle%22%20font-size%3D%2230%22%20font-weight%3D%22bold%22%3E%EB%A9%94%EB%89%B4%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22155%22%20font-size%3D%2225%22%3E%EB%83%89%EB%A9%B4%3C%2Ftext%3E%3Ctext%20x%3D%22500%22%20y%3D%22155%22%20text-anchor%3D%22end%22%20font-size%3D%2225%22%3E15%2C000%EC%9B%90%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22200%22%20font-size%3D%2225%22%3E%EB%96%A1%EB%B3%B6%EC%9D%B4%3C%2Ftext%3E%3Ctext%20x%3D%22500%22%20y%3D%22200%22%20text-anchor%3D%22end%22%20font-size%3D%2225%22%3E6%2C000%EC%9B%90%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22245%22%20font-size%3D%2225%22%3E%EA%B9%80%EB%B0%A5%3C%2Ftext%3E%3Ctext%20x%3D%22500%22%20y%3D%22245%22%20text-anchor%3D%22end%22%20font-size%3D%2225%22%3E3%2C500%EC%9B%90%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22285%22%20font-size%3D%2225%22%3E%EB%9D%BC%EB%A9%B4%3C%2Ftext%3E%3Ctext%20x%3D%22500%22%20y%3D%22285%22%20text-anchor%3D%22end%22%20font-size%3D%2225%22%3E4%2C000%EC%9B%90%3C%2Ftext%3E%3C%2Fsvg%3E',
-        'building.jpg': 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22700%22%20height%3D%22360%22%3E%3Crect%20width%3D%22700%22%20height%3D%22360%22%20fill%3D%22%23e0f2fe%22%2F%3E%3Crect%20x%3D%22210%22%20y%3D%2245%22%20width%3D%22280%22%20height%3D%22260%22%20fill%3D%22%23f8fafc%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%225%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%2285%22%20text-anchor%3D%22middle%22%20font-size%3D%2225%22%20font-weight%3D%22bold%22%3E%EB%B3%91%EC%9B%90%3C%2Ftext%3E%3Crect%20x%3D%22245%22%20y%3D%22105%22%20width%3D%2270%22%20height%3D%2265%22%20fill%3D%22%23bfdbfe%22%2F%3E%3Crect%20x%3D%22385%22%20y%3D%22105%22%20width%3D%2270%22%20height%3D%2265%22%20fill%3D%22%23bfdbfe%22%2F%3E%3Crect%20x%3D%22245%22%20y%3D%22195%22%20width%3D%2270%22%20height%3D%2265%22%20fill%3D%22%23bfdbfe%22%2F%3E%3Crect%20x%3D%22385%22%20y%3D%22195%22%20width%3D%2270%22%20height%3D%2265%22%20fill%3D%22%23bfdbfe%22%2F%3E%3Ctext%20x%3D%22350%22%20y%3D%22335%22%20text-anchor%3D%22middle%22%20font-size%3D%2224%22%3E2%EC%B8%B5%20%EB%B3%91%EC%9B%90%20%C2%B7%201%EC%B8%B5%20%EC%95%BD%EA%B5%AD%3C%2Ftext%3E%3C%2Fsvg%3E'
-    };
-    function assetImage(name) { return ASSET_IMAGES[name] || name; }
-    function setMascot(name) {
-        const el = document.getElementById('mascot-img');
-        if (el) el.src = assetImage(name);
-    }
-
     let currentStageIndex = 0;
     let currentQIndex = 0;
     let isGreetingStep = true; 
@@ -889,98 +866,123 @@
     let finalTranscript = '';
     let isAnswerProcessing = false;
 
-    function createSpeechRecognition() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return null;
-        try {
-            const r = new SpeechRecognition();
-            r.lang = 'ko-KR';
-            r.continuous = false;
-            r.interimResults = true;
-            r.maxAlternatives = 1;
-            r.onstart = function() {
-                isRecording = true;
-                const btn = document.getElementById('record-btn');
-                const status = document.getElementById('mic-status');
-                if (btn) { btn.classList.add('recording'); btn.innerHTML = '⏹️ 녹음 완료 (멈추기)'; }
-                if (status) status.innerText = '🔴 듣는 중... (말씀하세요)';
-            };
-            r.onresult = function(event) {
-                let text = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    text += event.results[i][0].transcript + ' ';
-                }
-                const clean = (finalTranscript + text).replace(/[?？]/g, '').trim();
-                document.getElementById('user-input').value = clean;
-                if (event.results[event.results.length - 1].isFinal) finalTranscript = clean + ' ';
-            };
-            r.onerror = function(event) {
-                console.error('음성 인식 오류:', event.error);
-                const status = document.getElementById('mic-status');
-                const messages = {
-                    'not-allowed': '마이크 권한이 차단되었습니다. 주소창 왼쪽 사이트 설정에서 마이크를 허용해 주세요.',
-                    'service-not-allowed': '이 브라우저에서 음성 인식 서비스가 차단되었습니다. Chrome에서 다시 시도해 주세요.',
-                    'audio-capture': '마이크를 찾을 수 없습니다. 마이크 연결과 권한을 확인해 주세요.',
-                    'no-speech': '음성이 들리지 않았어요. 다시 눌러서 천천히 말해 보세요.'
-                };
-                if (status) status.innerText = messages[event.error] || '음성 인식을 사용할 수 없습니다. 아래 입력창에 직접 입력해 주세요.';
-                isRecording = false;
-                const btn = document.getElementById('record-btn');
-                if (btn) { btn.classList.remove('recording'); btn.innerHTML = '🎤 음성 녹음 시작'; }
-            };
-            r.onend = function() {
-                if (isRecording) stopRecordUI(false);
-            };
-            return r;
-        } catch (e) {
-            console.error('음성 인식 초기화 실패:', e);
-            return null;
-        }
-    }
-
     function initSpeechRecognition() {
-        recognition = createSpeechRecognition();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+        try {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                let cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
+                document.getElementById('user-input').value = cleanText;
+            };
+
+            recognition.onend = function() {
+                if (isRecording) {
+                    stopRecordUI();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("음성 인식 오류:", event.error);
+                stopRecordUI();
+            };
+        } catch(e) {
+            console.error("음성 인식 초기화 실패:", e);
+        }
     }
 
     function toggleRecord() {
-        const btn = document.getElementById('record-btn');
-        const status = document.getElementById('mic-status');
-        if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
-            if (status) status.innerText = '이 브라우저에서는 음성 인식을 지원하지 않습니다. Chrome에서 사용하거나 직접 입력해 주세요.';
-            return;
-        }
-        if (isRecording) {
-            stopRecordUI(true);
-            return;
-        }
-        finalTranscript = '';
-        if (document.getElementById('user-input').value) {
-            finalTranscript = document.getElementById('user-input').value + ' ';
-        }
-        recognition = createSpeechRecognition();
         if (!recognition) {
-            if (status) status.innerText = '음성 인식을 시작할 수 없습니다. 직접 입력해 주세요.';
+            initSpeechRecognition();
+        }
+        if (!recognition) {
+            const micStatus = document.getElementById('mic-status');
+            if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 지원하지 않습니다. 텍스트로 입력해 주세요.';
             return;
         }
-        try {
-            recognition.start();
-        } catch (e) {
-            console.error('음성 인식 시작 실패:', e);
-            isRecording = false;
-            if (btn) { btn.classList.remove('recording'); btn.innerHTML = '🎤 음성 녹음 시작'; }
-            if (status) status.innerText = '음성 인식을 시작할 수 없습니다. Chrome의 마이크 권한을 확인해 주세요.';
+
+        const btn = document.getElementById('record-btn');
+        const micStatus = document.getElementById('mic-status');
+        
+        if (!isRecording) {
+            try {
+                const currentVal = document.getElementById('user-input').value;
+                if (currentVal && !finalTranscript) {
+                    finalTranscript = currentVal + ' ';
+                }
+                recognition.start();
+                isRecording = true;
+                btn.classList.add('recording');
+                btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+                micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+            } catch (e) {
+                console.error("음성 인식 시작 실패:", e);
+
+                // 첫 문제를 끝낸 직후에는 이전 음성 인식 세션의 onend가
+                // 완전히 끝나기 전에 다음 문제의 녹음 버튼을 누를 수 있습니다.
+                // 이때 Chrome이 InvalidStateError를 내면서 기존 코드가 팝업을 띄웠습니다.
+                // 팝업 대신 인식 객체를 새로 준비한 뒤 잠시 후 다시 시작합니다.
+                isRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '🎤 음성 녹음 시작';
+                if (micStatus) micStatus.innerText = '음성 인식을 다시 준비하고 있어요...';
+
+                try {
+                    recognition.abort();
+                } catch (abortError) {}
+
+                setTimeout(() => {
+                    initSpeechRecognition();
+                    if (!recognition) {
+                        if (micStatus) micStatus.innerText = '음성 인식을 사용할 수 없습니다. 텍스트로 입력해 주세요.';
+                        return;
+                    }
+                    try {
+                        recognition.start();
+                        isRecording = true;
+                        btn.classList.add('recording');
+                        btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+                        if (micStatus) micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+                    } catch (retryError) {
+                        console.error("음성 인식 재시작 실패:", retryError);
+                        isRecording = false;
+                        btn.classList.remove('recording');
+                        btn.innerHTML = '🎤 음성 녹음 시작';
+                        if (micStatus) micStatus.innerText = '음성 인식을 시작할 수 없습니다. 텍스트로 입력해 주세요.';
+                    }
+                }, 250);
+            }
+        } else {
+            stopRecordUI();
         }
     }
 
-    function stopRecordUI(callStop=true) {
+    function stopRecordUI() {
         isRecording = false;
-        if (callStop && recognition) {
-            try { recognition.stop(); } catch(e) {}
+        if (recognition) {
+            try { recognition.stop(); } catch(e){}
         }
         const btn = document.getElementById('record-btn');
-        const status = document.getElementById('mic-status');
-        if (btn) { btn.classList.remove('recording'); btn.innerHTML = '🎤 음성 녹음 시작'; }
-        if (status && status.innerText.indexOf('마이크') < 0 && status.innerText.indexOf('지원하지') < 0) status.innerText = '대기 중';
+        const micStatus = document.getElementById('mic-status');
+        if(btn) {
+            btn.classList.remove('recording');
+            btn.innerHTML = '🎤 음성 녹음 시작';
+        }
+        if(micStatus) {
+            micStatus.innerText = '대기 중';
+        }
     }
 
     function openStageSelect() {
@@ -1074,7 +1076,7 @@
 
             if (currentQ.img) {
                 let style = "width: 100%; height: 190px; object-fit: contain; border-radius: 10px; background: #FFF;";
-                visualArea.innerHTML = `<div class="visual-container"><img src="${assetImage(currentQ.img)}" alt="문제 이미지" style="${style}"></div>`;
+                visualArea.innerHTML = `<div class="visual-container"><img src="${currentQ.img}" alt="문제 이미지" style="${style}"></div>`;
             }
         }
         
@@ -1103,7 +1105,7 @@
         if (currentStageIndex === 0 && isGreetingStep) {
             let greetingMatched = ["안녕하세요", "반갑습니다"].every(keyword => inputVal.includes(keyword));
             if (!greetingMatched) {
-                setMascot('hint.png');
+                document.getElementById('mascot-img').src = 'hint.png';
                 feedbackBox.style.display = 'block';
                 feedbackBox.style.background = '#FEE2E2';
                 feedbackBox.style.color = '#991B1B';
@@ -1114,7 +1116,7 @@
             }
 
             isGreetingStep = false;
-            setMascot('success.png');
+            document.getElementById('mascot-img').src = 'success.png';
             feedbackBox.style.display = 'block';
             feedbackBox.style.background = '#ECFDF5';
             feedbackBox.style.color = '#065F46';
@@ -1123,7 +1125,7 @@
             triggerConfetti();
 
             setTimeout(() => {
-                setMascot('hint.png');
+                document.getElementById('mascot-img').src = 'hint.png';
                 updateStageUI();
             }, 2000);
             return;
@@ -1131,7 +1133,7 @@
 
         if (inputVal.includes("저가")) {
             wrongAttempts++;
-            setMascot('hint.png');
+            document.getElementById('mascot-img').src = 'hint.png';
             feedbackBox.style.display = 'block';
             feedbackBox.style.background = '#FEE2E2';
             feedbackBox.style.color = '#991B1B';
@@ -1241,7 +1243,7 @@
         }
 
         if (!matched) {
-            setMascot('hint.png');
+            document.getElementById('mascot-img').src = 'hint.png';
             feedbackBox.style.display = 'block';
             feedbackBox.style.background = '#FEF3C7';
             feedbackBox.style.color = '#92400E';
@@ -1322,7 +1324,7 @@
 
         wrongAttempts = 0;
         if (!wasRetryMode) isRetryMode = false;
-        setMascot('success.png');
+        document.getElementById('mascot-img').src = 'success.png';
         feedbackBox.style.display = 'block';
         feedbackBox.style.background = '#ECFDF5';
         feedbackBox.style.color = '#065F46';
@@ -1332,7 +1334,7 @@
         triggerConfetti();
 
         setTimeout(() => {
-            setMascot('hint.png');
+            document.getElementById('mascot-img').src = 'hint.png';
             isAnswerProcessing = false;
             if (wasRetryMode) {
                 advanceRetryQuestion();
