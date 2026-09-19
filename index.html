@@ -950,6 +950,7 @@
     let recordedChunks = [];
     let audioStream = null;
     let submitWaitTries = 0;
+    let speechFinalizeTimer = null;
 
     function getTranscribeUrl() {
         if (window.KOREAN_QUEST_TRANSCRIBE_URL) return window.KOREAN_QUEST_TRANSCRIBE_URL;
@@ -1018,6 +1019,28 @@
         if (micStatus) micStatus.innerText = statusText || '대기 중';
     }
 
+    function clearSpeechFinalizeTimer() {
+        if (speechFinalizeTimer) {
+            clearTimeout(speechFinalizeTimer);
+            speechFinalizeTimer = null;
+        }
+    }
+
+    function speechStatusFromInput() {
+        const input = document.getElementById('user-input');
+        const text = input ? input.value.trim() : '';
+        return text ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.';
+    }
+
+    function finishSpeechSession(statusText) {
+        clearSpeechFinalizeTimer();
+        isRecording = false;
+        isSpeechFinalizing = false;
+        recognition = null;
+        setRecordReadyUI(statusText || speechStatusFromInput());
+        setSubmitEnabled(true);
+    }
+
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return null;
@@ -1045,40 +1068,25 @@
             };
 
             rec.onend = function() {
-                if (recognition !== rec) return;
-                isRecording = false;
-                isSpeechFinalizing = false;
-                const input = document.getElementById('user-input');
-                const text = input ? input.value.trim() : '';
-                if (text) {
-                    setRecordReadyUI('녹음 완료 · 정답 확인을 눌러주세요');
-                } else {
-                    setRecordReadyUI('음성을 인식하지 못했어요. 다시 녹음해 주세요.');
-                }
-                setSubmitEnabled(true);
-                recognition = null;
+                if (recognition && recognition !== rec) return;
+                finishSpeechSession();
             };
 
             rec.onerror = function(event) {
-                if (recognition !== rec) return;
+                if (recognition && recognition !== rec) return;
                 if (event.error === 'aborted') {
                     isRecording = false;
-                    isSpeechFinalizing = false;
-                    recognition = null;
+                    isSpeechFinalizing = true;
                     return;
                 }
                 console.error("음성 인식 오류:", event.error);
-                isRecording = false;
-                isSpeechFinalizing = false;
                 const messages = {
                     'not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
                     'service-not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
                     'audio-capture': '마이크를 찾을 수 없습니다. 연결을 확인해 주세요.',
                     'no-speech': '음성이 들리지 않았어요. 다시 또렷하게 말해 주세요.'
                 };
-                setRecordReadyUI(messages[event.error] || '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
-                setSubmitEnabled(true);
-                recognition = null;
+                finishSpeechSession(messages[event.error] || '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
             };
 
             return rec;
@@ -1089,6 +1097,7 @@
     }
 
     function resetSpeechSession() {
+        clearSpeechFinalizeTimer();
         isRecording = false;
         isSpeechFinalizing = false;
         finalTranscript = '';
@@ -1116,7 +1125,7 @@
         const input = document.getElementById('user-input');
 
         if (isSpeechFinalizing) {
-            if (micStatus) micStatus.innerText = '음성 인식을 마무리하고 있어요...';
+            finishSpeechSession();
             return;
         }
 
@@ -1311,11 +1320,13 @@
             recognition.stop();
         } catch (e) {
             console.warn("음성 인식 종료 중:", e);
-            isSpeechFinalizing = false;
-            recognition = null;
-            setRecordReadyUI('녹음 완료 · 정답 확인을 눌러주세요');
-            setSubmitEnabled(true);
+            finishSpeechSession();
+            return;
         }
+
+        speechFinalizeTimer = setTimeout(function() {
+            finishSpeechSession();
+        }, 1200);
     }
 
     function openStageSelect() {
