@@ -946,60 +946,7 @@
     let isSpeechFinalizing = false;
     let finalTranscript = '';
     let isAnswerProcessing = false;
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let audioStream = null;
     let submitWaitTries = 0;
-    let speechFinalizeTimer = null;
-
-    function getTranscribeUrl() {
-        if (window.KOREAN_QUEST_TRANSCRIBE_URL) return window.KOREAN_QUEST_TRANSCRIBE_URL;
-        if (location.hostname.endsWith('github.io')) {
-            return 'https://korean-challenge1.netlify.app/.netlify/functions/transcribe';
-        }
-        return '/.netlify/functions/transcribe';
-    }
-
-    function isIOSDevice() {
-        const ua = navigator.userAgent || '';
-        return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-
-    function isSafariBrowser() {
-        const ua = navigator.userAgent || '';
-        return /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua);
-    }
-
-    function hasBrowserSpeechRecognition() {
-        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-    }
-
-    function useSafariSpeechMode() {
-        return isIOSDevice() || isSafariBrowser();
-    }
-
-    function shouldUseServerStt() {
-        return !hasBrowserSpeechRecognition();
-    }
-
-    function blobToBase64(blob) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const result = String(reader.result || '');
-                const comma = result.indexOf(',');
-                resolve(comma >= 0 ? result.slice(comma + 1) : result);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    }
-
-    function pickRecorderMime() {
-        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
-        if (typeof MediaRecorder === 'undefined') return '';
-        return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
-    }
 
     function setSubmitEnabled(enabled) {
         const submitBtn = document.getElementById('submit-btn');
@@ -1019,133 +966,52 @@
         if (micStatus) micStatus.innerText = statusText || '대기 중';
     }
 
-    function clearSpeechFinalizeTimer() {
-        if (speechFinalizeTimer) {
-            clearTimeout(speechFinalizeTimer);
-            speechFinalizeTimer = null;
-        }
-    }
-
-    function speechStatusFromInput() {
-        const input = document.getElementById('user-input');
-        const text = input ? input.value.trim() : '';
-        return text ? '녹음 완료 · 정답 확인을 눌러주세요' : '대기 중';
-    }
-
-    function applySpeechResult(event) {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const text = event.results[i][0].transcript || '';
-            if (event.results[i].isFinal) {
-                finalTranscript += text + ' ';
-            } else {
-                interimTranscript += text;
-            }
-        }
-        const cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
-        const input = document.getElementById('user-input');
-        if (input) input.value = cleanText;
-        if (cleanText && !isRecording) {
-            finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
-        }
-        return cleanText;
-    }
-
-    function finishSpeechSession(statusText) {
-        clearSpeechFinalizeTimer();
-        isRecording = false;
-        isSpeechFinalizing = false;
-        discardBackupRecorder();
-        setRecordReadyUI(statusText || speechStatusFromInput());
-        setSubmitEnabled(true);
-    }
-
-    function discardBackupRecorder() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            try { mediaRecorder.ondataavailable = null; } catch (e) {}
-            try { mediaRecorder.stop(); } catch (e) {}
-        }
-        mediaRecorder = null;
-        if (audioStream) {
-            audioStream.getTracks().forEach(function(track) { track.stop(); });
-            audioStream = null;
-        }
-        recordedChunks = [];
-    }
-
-    async function startBackupRecorder() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') return;
-        try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            if (!isRecording && !isSpeechFinalizing) {
-                audioStream.getTracks().forEach(function(track) { track.stop(); });
-                audioStream = null;
-                return;
-            }
-            recordedChunks = [];
-            const mimeType = pickRecorderMime();
-            mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
-            mediaRecorder.ondataavailable = function(event) {
-                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
-            };
-            mediaRecorder.start(250);
-        } catch (e) {
-            console.warn(e);
-            mediaRecorder = null;
-        }
-    }
-
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             recognition = null;
             return;
         }
-
         try {
             recognition = new SpeechRecognition();
             recognition.lang = 'ko-KR';
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.maxAlternatives = 1;
 
             recognition.onresult = function(event) {
-                applySpeechResult(event);
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const text = event.results[i][0].transcript || '';
+                    if (event.results[i].isFinal) {
+                        finalTranscript += text + ' ';
+                    } else {
+                        interimTranscript += text;
+                    }
+                }
+                const cleanText = (finalTranscript + interimTranscript).replace(/[?？?]/g, '').trim();
+                const input = document.getElementById('user-input');
+                if (input) input.value = cleanText;
             };
 
             recognition.onend = function() {
-                const input = document.getElementById('user-input');
-                const text = input ? input.value.trim() : '';
-                if (text) {
-                    finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
-                    return;
-                }
-                if (isSpeechFinalizing) {
-                    return;
-                }
-                if (isRecording && !useSafariSpeechMode()) {
-                    try {
-                        recognition.start();
-                    } catch (e) {
-                        finishSpeechSession(speechStatusFromInput());
-                    }
-                }
+                if (isRecording) stopRecordUI();
             };
 
             recognition.onerror = function(event) {
-                if (event.error === 'aborted' || event.error === 'no-speech') {
-                    return;
-                }
-                if (useSafariSpeechMode() && mediaRecorder) {
-                    return;
-                }
                 console.error("음성 인식 오류:", event.error);
-                const messages = {
-                    'not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
-                    'service-not-allowed': '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.',
-                    'audio-capture': '마이크를 찾을 수 없습니다. 연결을 확인해 주세요.'
-                };
-                finishSpeechSession(messages[event.error] || '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    const micStatus = document.getElementById('mic-status');
+                    if (micStatus) micStatus.innerText = '마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.';
+                    isRecording = false;
+                    const btn = document.getElementById('record-btn');
+                    if (btn) {
+                        btn.classList.remove('recording');
+                        btn.innerHTML = '🎤 음성 녹음 시작';
+                    }
+                    setSubmitEnabled(true);
+                    return;
+                }
+                if (isRecording) stopRecordUI();
             };
         } catch (e) {
             console.error("음성 인식 초기화 실패:", e);
@@ -1154,24 +1020,13 @@
     }
 
     function resetSpeechSession() {
-        clearSpeechFinalizeTimer();
         isRecording = false;
         isSpeechFinalizing = false;
         finalTranscript = '';
         submitWaitTries = 0;
         if (recognition) {
             try { recognition.abort(); } catch (e) {}
-            recognition = null;
         }
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            try { mediaRecorder.stop(); } catch (e) {}
-        }
-        mediaRecorder = null;
-        if (audioStream) {
-            audioStream.getTracks().forEach(function(track) { track.stop(); });
-            audioStream = null;
-        }
-        recordedChunks = [];
         setRecordReadyUI('대기 중');
         setSubmitEnabled(true);
     }
@@ -1179,69 +1034,49 @@
     function toggleRecord() {
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
-        const input = document.getElementById('user-input');
 
-        if (!recognition && mediaRecorder && (isRecording || mediaRecorder.state === 'recording')) {
-            toggleServerRecord();
-            return;
-        }
-
-        if (shouldUseServerStt()) {
-            toggleServerRecord();
-            return;
-        }
-
-        if (isSpeechFinalizing) {
-            clearSpeechFinalizeTimer();
-            isSpeechFinalizing = false;
-        }
-
+        if (!recognition) initSpeechRecognition();
         if (!recognition) {
-            initSpeechRecognition();
-        }
-        if (!recognition) {
-            toggleServerRecord();
+            if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 사용할 수 없습니다. 직접 입력해 주세요.';
             return;
         }
 
         if (!isRecording) {
-            finalTranscript = input && input.value.trim() ? input.value.trim() + ' ' : '';
-            isSpeechFinalizing = false;
-            setSubmitEnabled(false);
-            btn.classList.add('recording');
-            btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-            micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
-            isRecording = true;
-
             try {
+                const currentVal = document.getElementById('user-input').value;
+                if (currentVal && !finalTranscript) {
+                    finalTranscript = currentVal + ' ';
+                }
                 recognition.start();
-                if (useSafariSpeechMode()) startBackupRecorder();
+                isRecording = true;
+                btn.classList.add('recording');
+                btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+                micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
             } catch (e) {
                 console.error("음성 인식 시작 실패:", e);
                 isRecording = false;
+                btn.classList.remove('recording');
+                btn.innerHTML = '🎤 음성 녹음 시작';
+                if (micStatus) micStatus.innerText = '음성 인식을 다시 준비하고 있어요...';
                 try { recognition.abort(); } catch (abortError) {}
-                recognition = null;
-                setRecordReadyUI('음성 인식을 다시 준비하고 있어요...');
                 setTimeout(function() {
                     initSpeechRecognition();
                     if (!recognition) {
-                        toggleServerRecord();
+                        if (micStatus) micStatus.innerText = '음성 인식을 사용할 수 없습니다. 직접 입력해 주세요.';
                         return;
                     }
-                    isRecording = true;
-                    setSubmitEnabled(false);
                     try {
                         recognition.start();
-                        if (useSafariSpeechMode()) startBackupRecorder();
+                        isRecording = true;
                         btn.classList.add('recording');
                         btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-                        micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+                        if (micStatus) micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
                     } catch (retryError) {
                         console.error("음성 인식 재시작 실패:", retryError);
                         isRecording = false;
-                        recognition = null;
-                        setRecordReadyUI('음성 인식을 시작할 수 없습니다. 다시 눌러 주세요.');
-                        setSubmitEnabled(true);
+                        btn.classList.remove('recording');
+                        btn.innerHTML = '🎤 음성 녹음 시작';
+                        if (micStatus) micStatus.innerText = '음성 인식을 시작할 수 없습니다. 직접 입력해 주세요.';
                     }
                 }, 250);
             }
@@ -1250,134 +1085,24 @@
         }
     }
 
-    async function toggleServerRecord() {
-        const btn = document.getElementById('record-btn');
-        const micStatus = document.getElementById('mic-status');
-        if (isRecording) {
-            await stopServerRecord();
-            return;
-        }
-        try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            recordedChunks = [];
-            const mimeType = pickRecorderMime();
-            mediaRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
-            };
-            mediaRecorder.start(250);
-            isRecording = true;
-            setSubmitEnabled(false);
-            btn.classList.add('recording');
-            btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-            micStatus.innerText = '🔴 듣는 중... 말한 뒤 버튼을 다시 눌러 주세요.';
-        } catch (e) {
-            console.error(e);
-            micStatus.innerText = '마이크 권한이 필요해요. 설정에서 마이크를 허용해 주세요.';
-            isRecording = false;
-            btn.classList.remove('recording');
-            btn.innerHTML = '🎤 음성 녹음 시작';
-            setSubmitEnabled(true);
-        }
-    }
-
-    async function stopServerRecord() {
-        const btn = document.getElementById('record-btn');
-        const micStatus = document.getElementById('mic-status');
-        isRecording = false;
-        isSpeechFinalizing = false;
-        btn.classList.remove('recording');
-        btn.innerHTML = '🎤 음성 녹음 시작';
-        if (!mediaRecorder) {
-            if (micStatus) micStatus.innerText = '대기 중';
-            setSubmitEnabled(true);
-            return;
-        }
-        setSubmitEnabled(false);
-        const blob = await new Promise((resolve) => {
-            mediaRecorder.onstop = () => {
-                resolve(new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' }));
-            };
-            try { mediaRecorder.stop(); } catch (e) { resolve(null); }
-        });
-        if (audioStream) {
-            audioStream.getTracks().forEach(track => track.stop());
-            audioStream = null;
-        }
-        mediaRecorder = null;
-        if (!blob || blob.size < 400) {
-            if (micStatus) micStatus.innerText = '말이 잘 들리지 않았어요. 다시 녹음해 주세요.';
-            setSubmitEnabled(true);
-            return;
-        }
-        try {
-            micStatus.innerText = '알아듣는 중...';
-            const audio = await blobToBase64(blob);
-            const response = await fetch(getTranscribeUrl(), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ audio, mime: blob.type || 'audio/webm' })
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(data.error || 'transcribe failed');
-            }
-            const text = String(data.text || '').replace(/[?？?]/g, '').trim();
-            const input = document.getElementById('user-input');
-            if (text) {
-                input.value = input.value ? (input.value.trim() + ' ' + text) : text;
-                micStatus.innerText = '녹음 완료 · 정답 확인을 눌러주세요';
-            } else {
-                micStatus.innerText = '글자로 바꾸지 못했어요. 다시 말해 보거나 직접 입력해 주세요.';
-            }
-        } catch (e) {
-            console.error(e);
-            micStatus.innerText = '글자로 바꾸지 못했어요. 다시 말해 보거나 직접 입력해 주세요.';
-        }
-        setSubmitEnabled(true);
-    }
-
     function stopRecordUI() {
         isRecording = false;
-        isSpeechFinalizing = true;
-
+        isSpeechFinalizing = false;
+        if (recognition) {
+            try { recognition.stop(); } catch (e) {}
+        }
         const btn = document.getElementById('record-btn');
         const micStatus = document.getElementById('mic-status');
-        const input = document.getElementById('user-input');
-        const text = input ? input.value.trim() : '';
-
         if (btn) {
             btn.classList.remove('recording');
             btn.innerHTML = '🎤 음성 녹음 시작';
         }
-
-        if (recognition) {
-            try { recognition.stop(); } catch (e) {}
+        if (micStatus && micStatus.innerText.indexOf('마이크') < 0) {
+            const input = document.getElementById('user-input');
+            const text = input ? input.value.trim() : '';
+            micStatus.innerText = text ? '녹음 완료 · 정답 확인을 눌러주세요' : '대기 중';
         }
-
-        if (text) {
-            finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
-            return;
-        }
-
-        if (micStatus) micStatus.innerText = '음성 결과를 확인하고 있어요...';
-        setSubmitEnabled(false);
-
-        clearSpeechFinalizeTimer();
-        speechFinalizeTimer = setTimeout(function() {
-            const later = document.getElementById('user-input');
-            const laterText = later ? later.value.trim() : '';
-            if (laterText) {
-                finishSpeechSession('녹음 완료 · 정답 확인을 눌러주세요');
-                return;
-            }
-            if (mediaRecorder) {
-                if (micStatus) micStatus.innerText = '알아듣는 중...';
-                stopServerRecord();
-                return;
-            }
-            finishSpeechSession('음성을 인식하지 못했어요. 다시 녹음해 주세요.');
-        }, 1200);
+        setSubmitEnabled(true);
     }
 
     function openStageSelect() {
