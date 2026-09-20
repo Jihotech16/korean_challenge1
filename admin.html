@@ -371,7 +371,7 @@
     }
 
     function blankQuestion() {
-        return { q: buildQuestionHtml('새 문제', '제시어'), required: ['정답'] };
+        return { q: buildQuestionHtml('새 문제', '제시어'), required: [] };
     }
 
     function decodeHtml(value) {
@@ -506,12 +506,13 @@
             <div class="preview-box" id="q-preview">${buildQuestionHtml(parsed.title, parsed.prompts)}</div>
             <label>정답</label>
             <div class="help">
-                짧은 단어만 넣어도 되고, <b>정답 문장 전체</b>를 넣어도 됩니다.<br>
-                학생이 그 말(또는 그 문장)을 포함해서 말하면 정답입니다.<br>
-                한 줄에 하나씩 적으세요. 같은 뜻의 다른 표현은 <b>|</b> 로 나누면 됩니다.<br>
-                예: <code>네팔</code><br>
-                예: <code>저는 네팔 학생이에요</code><br>
-                예: <code>사요 | 사</code>
+                짧은 단어는 <b>한 줄에 하나씩</b> 적으면, 그 말이 모두 들어가야 정답입니다.<br>
+                같은 뜻의 다른 표현은 같은 줄에서 <b>|</b> 로 나누세요.<br>
+                정답 문장 전체를 허용하려면 문장을 한 줄에 적으세요. 문장 여러 개는 <b>|</b> 로 나누면 됩니다.<br>
+                예: <code>네팔</code> 다음 줄 <code>학생</code><br>
+                예: <code>저는 네팔 학생이에요 | 전 네팔 학생이에요</code><br>
+                예: <code>사요 | 사</code><br>
+                기본으로 들어 있는 <b>정답</b>이라는 글자는 지우세요.
             </div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
             <label>오답</label>
@@ -743,7 +744,7 @@
     }
 
     function currentJSON() {
-        saveStageMeta();
+        saveStageMeta(true);
         saveQuestion(true);
         return JSON.stringify(stages, null, 2);
     }

@@ -1259,13 +1259,82 @@
         });
     }
 
+    function normalizeAnswer(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/[?？!！.,，。~…·'"“”‘’`]/g, '')
+            .replace(/\s+/g, '');
+    }
+
+    function containsAnswer(inputNorm, requiredText) {
+        const needle = normalizeAnswer(requiredText);
+        return !!(needle && inputNorm.indexOf(needle) !== -1);
+    }
+
+    function isPlaceholderRequired(text) {
+        return normalizeAnswer(text) === '정답';
+    }
+
+    function isSentenceAnswer(text) {
+        const value = String(text || '').trim().replace(/[.,!?。，！？]+$/g, '');
+        return /\s/.test(value) && /(?:요|다|예요|이에요|아요|어요|여요|워요|해요|가요|와요|죠)$/.test(value);
+    }
+
+    function flattenRequired(required) {
+        const out = [];
+        (function walk(item) {
+            if (Array.isArray(item)) item.forEach(walk);
+            else if (item) out.push(String(item));
+        })(required);
+        return out;
+    }
+
+    function usableRequired(required) {
+        return (required || []).filter(function(item) {
+            if (Array.isArray(item)) return flattenRequired(item).some(function(alt) { return !isPlaceholderRequired(alt); });
+            return !isPlaceholderRequired(item);
+        });
+    }
+
+    function matchesRequirement(requirement, inputNorm) {
+        if (Array.isArray(requirement)) {
+            if (requirement.some(function(item) { return Array.isArray(item); })) {
+                return requirement.every(function(item) { return matchesRequirement(item, inputNorm); });
+            }
+            return requirement.some(function(alt) { return containsAnswer(inputNorm, alt); });
+        }
+        return containsAnswer(inputNorm, requirement);
+    }
+
+    function matchesRequiredList(inputVal, required) {
+        const inputNorm = normalizeAnswer(inputVal);
+        const list = usableRequired(required);
+        if (!list.length) return false;
+        const keywordGroups = list.filter(function(item) {
+            return !(typeof item === 'string' && isSentenceAnswer(item));
+        });
+        const sentenceAlts = list.filter(function(item) {
+            return typeof item === 'string' && isSentenceAnswer(item);
+        });
+        const keywordsMatch = !keywordGroups.length || keywordGroups.every(function(item) {
+            return matchesRequirement(item, inputNorm);
+        });
+        const sentenceMatch = sentenceAlts.some(function(item) {
+            return containsAnswer(inputNorm, item);
+        });
+        if (keywordGroups.length && sentenceAlts.length) return keywordsMatch || sentenceMatch;
+        if (sentenceAlts.length) return sentenceMatch;
+        return keywordsMatch;
+    }
+
     function findForbiddenMatch(inputVal, forbidden) {
+        const inputNorm = normalizeAnswer(inputVal);
         for (let i = 0; i < (forbidden || []).length; i++) {
             const item = forbidden[i];
             const alts = Array.isArray(item) ? item : [item];
             for (let j = 0; j < alts.length; j++) {
                 const word = String(alts[j] || '').trim();
-                if (word && inputVal.includes(word)) return word;
+                if (word && containsAnswer(inputNorm, word)) return word;
             }
         }
         return '';
@@ -1444,73 +1513,40 @@
         let matched = true;
         let customErrorMsg = "";
 
-        if (currentStageIndex === 0 && inputVal.includes("입니다")) {
+        const hintText = String((stages[currentStageIndex] && stages[currentStageIndex].hint) || '');
+        if (hintText.indexOf('입니다') !== -1 && inputVal.indexOf('입니다') !== -1) {
             matched = false;
             customErrorMsg = "'입니다'는 격식체예요. 비격식체인 '이에요'를 사용해 주세요!";
         }
 
-        if (currentStageIndex === 2 && inputVal.includes("사어요")) {
-            matched = false;
-            customErrorMsg = "'사다'의 올바른 형태는 '사요'예요!";
-        }
-
-        // STAGE 3.5 2번: 한국 생활 + 한국어 공부를 다양한 자연스러운 문장으로 허용
-        // 예: "나는 한국에서 한국어 공부를 해요."
-        //     "저는 한국에 살아요. 한국어 공부를 해요."
-        //     "저는 한국에 한국어 공부를 하러 왔어요."
-        //     "저는 한국이 좋아요. 한국어 공부를 해요."
-        if (currentStageIndex === 2 && currentQIndex === 1) {
-            const hasKorea = inputVal.includes("한국");
-            const hasStudy = inputVal.includes("공부");
-            if (hasKorea && hasStudy) {
-                matched = true;
-            } else {
-                matched = false;
-                customErrorMsg = "'한국'과 '한국어 공부'를 넣어서 자연스럽게 말해보세요.";
-            }
-        }
-
-        if (currentStageIndex === 1) {
-            // STAGE 2: 대답 안에서 지시사를 섞어 쓰지 않도록 한다.
-            // 예: "이것은 지우개가 아니에요. 그것은 필통이에요." → 오답
-            //     "이것은 지우개가 아니에요. 이것은 필통이에요." → 정답 후보
-            const hasIgeoseun = inputVal.includes("이것은");
-            const hasGeugeoseun = inputVal.includes("그것은");
+        if (currentQ.qDemo || currentQ.type === 'positive' || currentQ.type === 'negative') {
+            const hasIgeoseun = inputVal.indexOf('이것은') !== -1;
+            const hasGeugeoseun = inputVal.indexOf('그것은') !== -1;
             if (hasIgeoseun && hasGeugeoseun) {
                 matched = false;
                 customErrorMsg = "대답에서는 지시사를 하나로 통일해 주세요. <b>'이것은'</b>을 사용했다면 끝까지 '이것은', <b>'그것은'</b>을 사용했다면 끝까지 '그것은'으로 말해 주세요.";
-            } else if (currentQ.qDemo === "그것은" && hasGeugeoseun) {
+            } else if (currentQ.qDemo === '그것은' && hasGeugeoseun) {
                 matched = false;
                 customErrorMsg = "'그것은'으로 물었을 때는 화자 기준인 <b>'이것은'</b>으로 대답해야 해요!";
             }
         }
 
-        if (currentStageIndex === 6 && currentQ.forbidden) {
-            if (currentQ.forbidden.some(f => inputVal.includes(f))) {
-                matched = false;
-                customErrorMsg = "지갑의 위치를 표현할 때는 '가방과 가방 사이' 형태로 정확히 표현해보세요.";
-            }
-        }
-
-        if (currentStageIndex === 7 && currentQ.type === "birthday") {
-            if (inputVal.includes("육월")) {
+        if (currentQ.type === 'birthday') {
+            if (inputVal.indexOf('육월') !== -1) {
                 matched = false;
                 customErrorMsg = "6월은 '육월'이 아니라 반드시 <b>'유월'</b>로 읽어야 해요!";
-            } else if (inputVal.includes("십월")) {
+            } else if (inputVal.indexOf('십월') !== -1) {
                 matched = false;
                 customErrorMsg = "10월은 '십월'이 아니라 반드시 <b>'시월'</b>로 읽어야 해요!";
-            } else if (inputVal.includes("하나월") || inputVal.includes("둘월") || inputVal.includes("셋월")) {
+            } else if (inputVal.indexOf('하나월') !== -1 || inputVal.indexOf('둘월') !== -1 || inputVal.indexOf('셋월') !== -1) {
                 matched = false;
                 customErrorMsg = "월을 읽을 때는 한자어 수(일, 이, 삼...)를 사용해야 해요!";
             }
         }
 
-        if (currentStageIndex === 7 && currentQIndex === 2 && inputVal.includes("저는")) {
-            matched = false;
-            customErrorMsg = "질문이 '누가 사미르예요?'이므로 <b>'제가 사미르예요'</b>로 대답해야 해요!";
-        }
-
-        if (currentQ.particleType && !inputVal.includes(currentQ.particleType)) {
+        const requiredTexts = flattenRequired(currentQ.required);
+        const requiredAlreadyHasParticle = requiredTexts.some(function(text) { return text.indexOf('에') !== -1; });
+        if (currentQ.particleType && !requiredAlreadyHasParticle && inputVal.indexOf(currentQ.particleType) === -1) {
             matched = false;
             customErrorMsg = `장소에 맞는 '${currentQ.particleType}' 조사를 사용해 주세요.`;
         }
@@ -1525,20 +1561,8 @@
             }
         }
 
-        function matchesRequirement(requirement) {
-            if (Array.isArray(requirement)) {
-                // 한 단계 배열: 여러 표현 중 하나를 허용
-                // 중첩 배열: 각 조건 묶음을 모두 만족해야 함
-                if (requirement.some(item => Array.isArray(item))) {
-                    return requirement.every(item => matchesRequirement(item));
-                }
-                return requirement.some(alt => inputVal.includes(alt));
-            }
-            return inputVal.includes(requirement);
-        }
-
         if (matched) {
-            matched = currentQ.required.every(matchesRequirement);
+            matched = matchesRequiredList(inputVal, currentQ.required);
         }
 
         if (!matched) {
