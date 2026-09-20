@@ -1,6 +1,7 @@
 [
   {
     "stage": "STAGE 1",
+    "level": "beginner",
     "grammarTitle": "자기소개 및 직업 (이에요/예요)",
     "mascotSpeech": "자신을 자연스럽게 소개해보세요!",
     "hint": "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 &#39;입니다&#39; 사용 금지)",
@@ -44,6 +45,7 @@
   },
   {
     "stage": "STAGE 2",
+    "level": "beginner",
     "grammarTitle": "긍정/부정 대답 및 지시사 (이/그/저)",
     "mascotSpeech": "선생님의 질문에 올바른 지시사를 써서 대답해봐요!",
     "hint": "<b>[보기]</b> 네, 이것은/그것은 N이에요/예요 또는 아니요, 저것은/그것은 N이/가 아니에요",
@@ -134,6 +136,7 @@
   },
   {
     "stage": "STAGE 3",
+    "level": "beginner",
     "grammarTitle": "일상 행동 표현 (-을/를 V-아요/어요)",
     "mascotSpeech": "지금 무엇을 해요?",
     "hint": "<b>[보기]</b> N을/를 V-아요/어요 (받침 O: 을 / 받침 X:를 - 받침 있는/없는 명사 골고루 혼합)",
@@ -218,6 +221,7 @@
   },
   {
     "stage": "STAGE 3.5",
+    "level": "beginner",
     "grammarTitle": "1~3단계 종합 복습 챌린지",
     "mascotSpeech": "개연성을 가진 대화를 이어가며 종합 회화를 연습해봐요!",
     "hint": "<b>[보기]</b> 자기소개 + 사물 부정/긍정 + 일상 행동 연결 회화",
@@ -257,6 +261,7 @@
   },
   {
     "stage": "STAGE 4",
+    "level": "beginner",
     "grammarTitle": "'ㅂ' 불규칙 및 형용사/동사",
     "mascotSpeech": "상태(형용사)와 행동(동사)의 알맞은 조사를 써서 표현해봐요!",
     "hint": "<b>[보기]</b> 형용사(가벼워요, 추워요)는 '이/가' 사용, 타동사(잡다➔잡아요)는 '을/를' 사용",
@@ -455,6 +460,7 @@
   },
   {
     "stage": "STAGE 5",
+    "level": "beginner",
     "grammarTitle": "장소 조사 (에 / 에서) 및 일상 묻고 답하기",
     "mascotSpeech": "장소와 일상 활동을 정확한 조사로 표현해봐요!",
     "hint": "<b>[보기]</b> 장소에(이동), 장소에서(행동)",
@@ -560,6 +566,7 @@
   },
   {
     "stage": "STAGE 6",
+    "level": "beginner",
     "grammarTitle": "위치 표현 (N에 있어요)",
     "mascotSpeech": "그림을 보고 사물이 어디에 있는지 위치어와 조사를 정확하게 말해봐요!",
     "hint": "<b>[보기]</b> 이미지를 보고 위치어와 <b>에 있어요</b>를 쓰세요. (제시어 없음)",
@@ -658,6 +665,7 @@
   },
   {
     "stage": "STAGE 7",
+    "level": "beginner",
     "grammarTitle": "시계 읽기, 가격 묻기 및 종합 챌린지",
     "mascotSpeech": "시계를 읽고, 가격과 위치, 생일을 자유롭게 대답해봐요!",
     "hint": "<b>[보기]</b> 이미지의 시각과 상황을 보고 올바른 문장으로 대답하세요. (6월은 '유월', 10월은 '시월' 주의!)",
@@ -795,6 +803,7 @@
   },
   {
     "stage": "STAGE 8",
+    "level": "beginner",
     "grammarTitle": "보너스 종합 챌린지",
     "mascotSpeech": "보너스 챌린지 문제들을 풀어봐요!",
     "hint": "<b>[보기]</b> 유학생 친구들의 다양한 일상 회화 표현",

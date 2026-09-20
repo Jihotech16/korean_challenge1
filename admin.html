@@ -256,11 +256,14 @@
         if (local) {
             stages = JSON.parse(local);
             setSaveStatus('이 기기에 저장된 미리보기 문제를 불러왔습니다.');
-            return;
+        } else {
+            const res = await fetch('questions.json?t=' + Date.now());
+            stages = await res.json();
+            setSaveStatus('현재 공개된 문제를 불러왔습니다.');
         }
-        const res = await fetch('questions.json?t=' + Date.now());
-        stages = await res.json();
-        setSaveStatus('현재 공개된 문제를 불러왔습니다.');
+        stages.forEach(function(stage) {
+            if (!stage.level) stage.level = 'beginner';
+        });
     }
 
     function renderAll() {
@@ -273,7 +276,7 @@
         list.innerHTML = stages.map((stage, index) => `
             <button class="stage-item ${index === currentStage ? 'active' : ''}" onclick="selectStage(${index})">
                 <b>${escapeHtml(stage.stage || ('STAGE ' + (index + 1)))}</b><br>
-                <span class="muted">${escapeHtml(stage.grammarTitle || '')} · 문제 ${stage.questions.length}개</span>
+                <span class="muted">${escapeHtml(levelLabel(stage.level))} · ${escapeHtml(stage.grammarTitle || '')} · 문제 ${stage.questions.length}개</span>
             </button>
         `).join('');
     }
@@ -287,6 +290,7 @@
     function addStage() {
         stages.push({
             stage: 'STAGE ' + (stages.length + 1),
+            level: 'beginner',
             grammarTitle: '새 문법',
             mascotSpeech: '새 스테이지를 시작해봐요!',
             hint: buildHint('힌트를 적어 주세요.'),
@@ -375,6 +379,12 @@
         return 'https://koreanclallenge.netlify.app/.netlify/functions/' + name;
     }
 
+    function levelLabel(level) {
+        if (level === 'intermediate' || level === '중급') return '중급';
+        if (level === 'advanced' || level === '고급') return '고급';
+        return '초급';
+    }
+
     function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, ch => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -394,6 +404,12 @@
         document.getElementById('stage-editor').innerHTML = `
             <label>스테이지 이름</label>
             <input id="stage-name" value="${escapeHtml(stage.stage)}">
+            <label>난이도</label>
+            <select id="stage-level">
+                <option value="beginner" ${stage.level === 'beginner' ? 'selected' : ''}>초급</option>
+                <option value="intermediate" ${stage.level === 'intermediate' ? 'selected' : ''}>중급</option>
+                <option value="advanced" ${stage.level === 'advanced' ? 'selected' : ''}>고급</option>
+            </select>
             <label>문법 제목</label>
             <input id="stage-title" value="${escapeHtml(stage.grammarTitle)}">
             <label>마스코트 말</label>
@@ -548,6 +564,7 @@
     function saveStageMeta() {
         const stage = stages[currentStage];
         stage.stage = document.getElementById('stage-name').value.trim();
+        stage.level = document.getElementById('stage-level').value || 'beginner';
         stage.grammarTitle = document.getElementById('stage-title').value.trim();
         stage.mascotSpeech = document.getElementById('stage-speech').value.trim();
         stage.hint = buildHint(document.getElementById('stage-hint').value);

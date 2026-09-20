@@ -691,6 +691,40 @@
             box-shadow: 0 8px 18px rgba(99, 102, 241, 0.28);
         }
 
+        .home-level-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .home-level-btn {
+            width: 100%;
+            border: 0;
+            border-radius: 16px;
+            padding: 13px 12px;
+            font-family: inherit;
+            font-size: 1.02rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .home-level-btn.beginner {
+            color: white;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.25);
+        }
+
+        .home-level-btn.intermediate {
+            color: white;
+            background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+            box-shadow: 0 8px 18px rgba(99, 102, 241, 0.25);
+        }
+
+        .home-level-btn.advanced {
+            color: white;
+            background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+            box-shadow: 0 8px 18px rgba(244, 63, 94, 0.22);
+        }
+
         .home-secondary {
             width: 100%;
             margin-top: 8px;
@@ -702,6 +736,30 @@
             background: #EEF2FF;
             color: #4338CA;
             cursor: pointer;
+        }
+
+        .level-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .level-tab {
+            border: 1px solid #E2E8F0;
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 8px 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .level-tab.active {
+            border-color: #6366F1;
+            background: #EEF2FF;
+            color: #4338CA;
+            font-weight: bold;
         }
 
         .btn-home {
@@ -737,9 +795,13 @@
             <div class="home-tips">
                 🎤 음성으로 말하거나 직접 입력할 수 있어요.<br>
                 📱 안드로이드는 Chrome, 아이폰은 말한 뒤 버튼을 다시 눌러 주세요.<br>
-                🗺️ 원하는 단계만 골라서 연습할 수도 있어요.
+                🗺️ 초급·중급·고급 중에서 골라 연습할 수 있어요.
             </div>
-            <button class="home-start" onclick="startGame()">시작하기 🚀</button>
+            <div class="home-level-grid">
+                <button class="home-level-btn beginner" onclick="startLevel('beginner')">🌱 초급 시작</button>
+                <button class="home-level-btn intermediate" onclick="startLevel('intermediate')">🌿 중급 시작</button>
+                <button class="home-level-btn advanced" onclick="startLevel('advanced')">🌳 고급 시작</button>
+            </div>
             <button class="home-secondary" onclick="startFromStageSelect()">단계 선택하고 시작</button>
         </div>
     </div>
@@ -765,7 +827,11 @@
             <div style="font-size: 2rem; margin-bottom: 2px;">🗺️</div>
             <div class="modal-title">단계 선택하기</div>
             <div class="modal-subtitle">복습하고 싶은 스테이지를 선택하세요!</div>
-            
+            <div class="level-tabs">
+                <button class="level-tab active" id="level-tab-beginner" onclick="setStageSelectLevel('beginner')">🌱 초급</button>
+                <button class="level-tab" id="level-tab-intermediate" onclick="setStageSelectLevel('intermediate')">🌿 중급</button>
+                <button class="level-tab" id="level-tab-advanced" onclick="setStageSelectLevel('advanced')">🌳 고급</button>
+            </div>
             <div class="report-scroll-area" id="stage-select-list"></div>
 
             <button class="btn-next-stage" onclick="closeStageSelect()" style="background: #94A3B8; box-shadow: none;">
@@ -873,6 +939,9 @@
                 stages = await res.json();
             }
             if (!Array.isArray(stages) || stages.length === 0) throw new Error('문제 데이터가 비어 있습니다');
+            stages.forEach(function(stage) {
+                if (!stage.level) stage.level = 'beginner';
+            });
             hideLoadOverlay();
             showHome();
         } catch (e) {
@@ -892,7 +961,7 @@
     function resetPlayState(startIndex) {
         currentStageIndex = startIndex || 0;
         currentQIndex = 0;
-        isGreetingStep = (currentStageIndex === 0);
+        isGreetingStep = (currentStageIndex === 0 && stageLevel(stages[0] || {}) === 'beginner');
         score = 0;
         stageScore = 0;
         stageResults = [];
@@ -914,11 +983,45 @@
         const home = document.getElementById('home-screen');
         if (home) home.classList.add('hidden');
         resetPlayState(startIndex);
+        if (stages[currentStageIndex]) currentPlayLevel = stageLevel(stages[currentStageIndex]);
         updateStageUI();
     }
 
+    const LEVEL_LABELS = {
+        beginner: '초급',
+        intermediate: '중급',
+        advanced: '고급'
+    };
+
+    function stageLevel(stage) {
+        const value = stage && stage.level;
+        if (value === '중급' || value === 'intermediate') return 'intermediate';
+        if (value === '고급' || value === 'advanced') return 'advanced';
+        return 'beginner';
+    }
+
+    function firstIndexOfLevel(level) {
+        return stages.findIndex(function(stage) { return stageLevel(stage) === level; });
+    }
+
+    function nextIndexOfLevel(fromIndex, level) {
+        return stages.findIndex(function(stage, index) {
+            return index > fromIndex && stageLevel(stage) === level;
+        });
+    }
+
+    function startLevel(level) {
+        const startIndex = firstIndexOfLevel(level);
+        if (startIndex < 0) {
+            alert((LEVEL_LABELS[level] || level) + ' 문제가 아직 없어요. 선생님이 스테이지를 추가하면 시작할 수 있어요.');
+            return;
+        }
+        currentPlayLevel = level;
+        startGame(startIndex);
+    }
+
     function startFromStageSelect() {
-        startGame(0);
+        currentPlayLevel = 'beginner';
         openStageSelect();
     }
 
@@ -930,6 +1033,8 @@
 
     let currentStageIndex = 0;
     let currentQIndex = 0;
+    let currentPlayLevel = 'beginner';
+    let stageSelectLevel = 'beginner';
     let isGreetingStep = true; 
     let score = 0;
     let stageScore = 0;
@@ -1105,16 +1210,34 @@
         setSubmitEnabled(true);
     }
 
-    function openStageSelect() {
-        let listHtml = '';
-        stages.forEach((s, idx) => {
-            listHtml += `
-                <button class="stage-select-btn" onclick="jumpToStage(${idx})">
-                    <b>${s.stage}</b>: ${s.grammarTitle}
+    function setStageSelectLevel(level) {
+        stageSelectLevel = level;
+        ['beginner', 'intermediate', 'advanced'].forEach(function(id) {
+            const tab = document.getElementById('level-tab-' + id);
+            if (tab) tab.classList.toggle('active', id === level);
+        });
+        renderStageSelectList();
+    }
+
+    function renderStageSelectList() {
+        const list = stages
+            .map(function(stage, idx) { return { stage: stage, idx: idx }; })
+            .filter(function(item) { return stageLevel(item.stage) === stageSelectLevel; });
+        if (!list.length) {
+            document.getElementById('stage-select-list').innerHTML = '<div class="report-item" style="text-align:center;">이 난이도 문제가 아직 없어요.</div>';
+            return;
+        }
+        document.getElementById('stage-select-list').innerHTML = list.map(function(item) {
+            return `
+                <button class="stage-select-btn" onclick="jumpToStage(${item.idx})">
+                    <b>${item.stage.stage}</b>: ${item.stage.grammarTitle}
                 </button>
             `;
-        });
-        document.getElementById('stage-select-list').innerHTML = listHtml;
+        }).join('');
+    }
+
+    function openStageSelect() {
+        setStageSelectLevel(currentPlayLevel || 'beginner');
         document.getElementById('stage-select-modal').style.display = 'flex';
     }
 
@@ -1127,8 +1250,9 @@
         if (home) home.classList.add('hidden');
         closeStageSelect();
         currentStageIndex = idx;
+        currentPlayLevel = stageLevel(stages[idx] || {});
         currentQIndex = 0;
-        isGreetingStep = (idx === 0);
+        isGreetingStep = (idx === 0 && currentPlayLevel === 'beginner');
         stageResults = [];
         stageScore = 0;
         firstRoundClearCount = 0;
@@ -1546,12 +1670,13 @@
     function proceedNextStage() {
         document.getElementById('clear-modal').style.display = 'none';
         
-        currentStageIndex++;
-        if (currentStageIndex >= stages.length) {
-            alert("🏆 축하합니다! 모든 1~8단계 대장정을 완벽하게 클리어했습니다!");
+        const nextIndex = nextIndexOfLevel(currentStageIndex, currentPlayLevel);
+        if (nextIndex < 0) {
+            alert('🏆 축하합니다! ' + (LEVEL_LABELS[currentPlayLevel] || '') + '을 모두 클리어했습니다!');
             goHome();
             return;
         }
+        currentStageIndex = nextIndex;
 
         currentQIndex = 0;
         stageResults = []; 
