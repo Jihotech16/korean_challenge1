@@ -117,6 +117,31 @@
             color: var(--muted);
             line-height: 1.45;
         }
+        .preview-box {
+            background: #F5F3FF;
+            border: 1px dashed #C4B5FD;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-family: 'Jua', sans-serif;
+            line-height: 1.5;
+        }
+        .target-word {
+            background: #FEF3C7;
+            color: #B45309;
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+        details.advanced {
+            margin-top: 16px;
+            background: #F8FAFC;
+            border-radius: 14px;
+            padding: 10px 12px;
+        }
+        details.advanced summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #475569;
+        }
         @media (max-width: 800px) {
             .wrap { grid-template-columns: 1fr; padding: 12px; }
         }
@@ -252,7 +277,7 @@
             stage: 'STAGE ' + (stages.length + 1),
             grammarTitle: '새 문법',
             mascotSpeech: '새 스테이지를 시작해봐요!',
-            hint: '<b>[보기]</b> 힌트를 적어 주세요.',
+            hint: buildHint('힌트를 적어 주세요.'),
             questions: [blankQuestion()]
         });
         currentStage = stages.length - 1;
@@ -261,7 +286,50 @@
     }
 
     function blankQuestion() {
-        return { q: '새 문제', required: ['키워드'] };
+        return { q: buildQuestionHtml('새 문제', '키워드'), required: ['키워드'] };
+    }
+
+    function decodeHtml(value) {
+        const box = document.createElement('textarea');
+        box.innerHTML = String(value || '');
+        return box.value;
+    }
+
+    function parseQuestionHtml(q) {
+        const raw = String(q || '');
+        const promptMatch = raw.match(/제시어:\s*<span[^>]*>([\s\S]*?)<\/span>/i);
+        const prompts = promptMatch ? decodeHtml(promptMatch[1]).replace(/\s+/g, ' ').trim() : '';
+        let title = raw.replace(/<br\s*\/?>\s*\(?\s*제시어:[\s\S]*$/i, '');
+        title = title
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/?b>/gi, '')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ');
+        return {
+            title: decodeHtml(title).trim(),
+            prompts
+        };
+    }
+
+    function buildQuestionHtml(title, prompts) {
+        const safeTitle = escapeHtml(String(title || '').trim()).replace(/\n/g, '<br>');
+        const words = String(prompts || '').trim();
+        if (!safeTitle && !words) return '새 문제';
+        if (!words) return safeTitle || '새 문제';
+        return `${safeTitle}<br>(제시어: <span class='target-word'>${escapeHtml(words)}</span>)`;
+    }
+
+    function parseHint(hint) {
+        return decodeHtml(String(hint || '')
+            .replace(/<b>\s*\[보기\]\s*<\/b>\s*/i, '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, ''))
+            .trim();
+    }
+
+    function buildHint(text) {
+        const plain = String(text || '').trim();
+        return plain ? `<b>[보기]</b> ${escapeHtml(plain).replace(/\n/g, '<br>')}` : '';
     }
 
     function requiredToText(required) {
@@ -293,6 +361,7 @@
         }
         if (currentQuestion >= stage.questions.length) currentQuestion = 0;
         const question = stage.questions[currentQuestion] || blankQuestion();
+        const parsed = parseQuestionHtml(question.q);
         document.getElementById('editor-title').innerText = stage.stage + ' 편집';
         document.getElementById('stage-editor').innerHTML = `
             <label>스테이지 이름</label>
@@ -301,8 +370,9 @@
             <input id="stage-title" value="${escapeHtml(stage.grammarTitle)}">
             <label>마스코트 말</label>
             <input id="stage-speech" value="${escapeHtml(stage.mascotSpeech)}">
-            <label>힌트 (HTML 가능)</label>
-            <textarea id="stage-hint">${escapeHtml(stage.hint)}</textarea>
+            <label>힌트</label>
+            <div class="help">학생 화면에 [보기]로 보입니다. 그냥 설명만 적으면 됩니다.</div>
+            <textarea id="stage-hint">${escapeHtml(parseHint(stage.hint))}</textarea>
             <div class="row">
                 <button class="btn gray" onclick="saveStageMeta()">스테이지 정보 저장</button>
                 <button class="btn gray" onclick="moveStage(-1)">위로</button>
@@ -312,36 +382,45 @@
             <h3>문제 ${stage.questions.length}개</h3>
             <div>${stage.questions.map((item, index) => `
                 <button class="q-item ${index === currentQuestion ? 'active' : ''}" onclick="selectQuestion(${index})">
-                    ${index + 1}. ${escapeHtml(String(item.q || '').replace(/<br>/g, ' ').replace(/<[^>]+>/g, ''))}
+                    ${index + 1}. ${escapeHtml(parseQuestionHtml(item.q).title || '새 문제')}
                 </button>
             `).join('')}</div>
             <div class="row">
                 <button class="btn" onclick="addQuestion()">문제 추가</button>
             </div>
-            <label>문제 내용 (HTML 가능)</label>
-            <textarea id="q-text">${escapeHtml(question.q || '')}</textarea>
+            <label>문제</label>
+            <div class="help">학생이 보는 질문입니다. 줄을 바꾸면 화면에서도 줄이 바뀝니다.</div>
+            <textarea id="q-title" oninput="updateQuestionPreview()">${escapeHtml(parsed.title)}</textarea>
+            <label>제시어</label>
+            <div class="help">학생에게 노랗게 보여줄 단어입니다. 예: 네팔, 학생</div>
+            <input id="q-prompts" value="${escapeHtml(parsed.prompts)}" oninput="updateQuestionPreview()" placeholder="예: 네팔, 학생">
+            <label>학생 화면 미리보기</label>
+            <div class="preview-box" id="q-preview">${buildQuestionHtml(parsed.title, parsed.prompts)}</div>
             <label>정답 키워드</label>
-            <div class="help">한 줄이 꼭 들어가야 하는 조건입니다. 같은 줄에서 <b>|</b> 로 나누면 그중 하나만 있어도 됩니다.<br>예: <code>네팔</code><br>예: <code>사요 | 사</code></div>
+            <div class="help">학생이 반드시 말해야 하는 단어입니다. 한 줄에 하나씩 적으세요.<br>같은 뜻이면 <b>|</b> 로 나누면 됩니다. 예: <code>사요 | 사</code></div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
-            <label>금지 표현 (선택, 한 줄에 하나)</label>
-            <textarea id="q-forbidden">${escapeHtml((question.forbidden || []).join('\n'))}</textarea>
             <label>이미지</label>
             <select id="q-img">${IMAGE_OPTIONS.map(img => `<option value="${img}" ${question.img === img ? 'selected' : ''}>${img || '(없음)'}</option>`).join('')}</select>
-            <label>문제 유형</label>
-            <select id="q-type">
-                <option value="" ${!question.type ? 'selected' : ''}>(없음)</option>
-                <option value="positive" ${question.type === 'positive' ? 'selected' : ''}>긍정</option>
-                <option value="negative" ${question.type === 'negative' ? 'selected' : ''}>부정</option>
-                <option value="birthday" ${question.type === 'birthday' ? 'selected' : ''}>생일</option>
-            </select>
-            <label>지시사 보기 (qDemo)</label>
-            <input id="q-demo" value="${escapeHtml(question.qDemo || '')}" placeholder="예: 이것은">
-            <label>조사 검사 (particleType)</label>
-            <select id="q-particle">
-                <option value="" ${!question.particleType ? 'selected' : ''}>(없음)</option>
-                <option value="에" ${question.particleType === '에' ? 'selected' : ''}>에</option>
-                <option value="에서" ${question.particleType === '에서' ? 'selected' : ''}>에서</option>
-            </select>
+            <details class="advanced">
+                <summary>더 자세한 설정 (필요할 때만)</summary>
+                <label>금지 표현 (한 줄에 하나)</label>
+                <textarea id="q-forbidden">${escapeHtml((question.forbidden || []).join('\n'))}</textarea>
+                <label>문제 유형</label>
+                <select id="q-type">
+                    <option value="" ${!question.type ? 'selected' : ''}>(없음)</option>
+                    <option value="positive" ${question.type === 'positive' ? 'selected' : ''}>긍정</option>
+                    <option value="negative" ${question.type === 'negative' ? 'selected' : ''}>부정</option>
+                    <option value="birthday" ${question.type === 'birthday' ? 'selected' : ''}>생일</option>
+                </select>
+                <label>지시사 보기</label>
+                <input id="q-demo" value="${escapeHtml(question.qDemo || '')}" placeholder="예: 이것은">
+                <label>조사 검사</label>
+                <select id="q-particle">
+                    <option value="" ${!question.particleType ? 'selected' : ''}>(없음)</option>
+                    <option value="에" ${question.particleType === '에' ? 'selected' : ''}>에</option>
+                    <option value="에서" ${question.particleType === '에서' ? 'selected' : ''}>에서</option>
+                </select>
+            </details>
             <div class="row">
                 <button class="btn ok" onclick="saveQuestion()">이 문제 저장</button>
                 <button class="btn gray" onclick="moveQuestion(-1)">문제 위로</button>
@@ -351,12 +430,20 @@
         `;
     }
 
+    function updateQuestionPreview() {
+        const preview = document.getElementById('q-preview');
+        const title = document.getElementById('q-title');
+        const prompts = document.getElementById('q-prompts');
+        if (!preview || !title || !prompts) return;
+        preview.innerHTML = buildQuestionHtml(title.value, prompts.value);
+    }
+
     function saveStageMeta() {
         const stage = stages[currentStage];
         stage.stage = document.getElementById('stage-name').value.trim();
         stage.grammarTitle = document.getElementById('stage-title').value.trim();
         stage.mascotSpeech = document.getElementById('stage-speech').value.trim();
-        stage.hint = document.getElementById('stage-hint').value;
+        stage.hint = buildHint(document.getElementById('stage-hint').value);
         renderAll();
         setSaveStatus('스테이지 정보를 반영했습니다. 아래 저장 버튼으로 남겨 주세요.');
     }
@@ -372,7 +459,10 @@
         const stage = stages[currentStage];
         if (!stage || !stage.questions[currentQuestion]) return;
         const question = {
-            q: document.getElementById('q-text').value,
+            q: buildQuestionHtml(
+                document.getElementById('q-title').value,
+                document.getElementById('q-prompts').value
+            ),
             required: textToRequired(document.getElementById('q-required').value)
         };
         const forbidden = textToList(document.getElementById('q-forbidden').value);
@@ -468,7 +558,7 @@
     function getPublishUrl() {
         if (window.KOREAN_QUEST_PUBLISH_URL) return window.KOREAN_QUEST_PUBLISH_URL;
         if (location.hostname.endsWith('netlify.app')) return '/.netlify/functions/publish';
-        return 'https://lambent-ganache-359054.netlify.app/.netlify/functions/publish';
+        return 'https://koreanclallenge.netlify.app/.netlify/functions/publish';
     }
 
     async function publishGitHub() {
