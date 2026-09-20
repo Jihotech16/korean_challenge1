@@ -1001,7 +1001,7 @@
         if (home) home.classList.add('hidden');
         resetPlayState(startIndex);
         if (stages[currentStageIndex]) currentPlayLevel = stageLevel(stages[currentStageIndex]);
-        updateStageUI();
+        updateStageUI(true);
     }
 
     const LEVEL_LABELS = {
@@ -1076,6 +1076,7 @@
     let submitWaitTries = 0;
     let lastFullTranscript = '';
     let speechBaseline = '';
+    let micReady = false;
 
     function setSubmitEnabled(enabled) {
         const submitBtn = document.getElementById('submit-btn');
@@ -1173,6 +1174,7 @@
         rec.interimResults = true;
         rec.onresult = function(event) {
             if (recognition !== rec) return;
+            micReady = true;
             lastFullTranscript = collectTranscript(event);
             if (!isRecording) {
                 freezeSpeechBaseline();
@@ -1182,7 +1184,7 @@
         };
         rec.onend = function() {
             if (recognition !== rec) return;
-            if (isIOSDevice() && speechEngineOn) {
+            if (speechEngineOn) {
                 try {
                     rec.start();
                     return;
@@ -1204,7 +1206,12 @@
             console.error('음성 인식 오류:', error);
             if (error === 'not-allowed' || error === 'service-not-allowed') {
                 speechEngineOn = false;
-                markSpeechIdle('마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.');
+                isRecording = false;
+                if (micReady) {
+                    markSpeechIdle('마이크가 잠시 끊겼어요. 음성 녹음 시작을 눌러 주세요.');
+                } else {
+                    markSpeechIdle('마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.');
+                }
             }
         };
         return rec;
@@ -1222,10 +1229,6 @@
             setRecordReadyUI(text ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.');
         }
         setSubmitEnabled(true);
-        if (!isIOSDevice() && recognition) {
-            speechEngineOn = false;
-            try { recognition.stop(); } catch (e) {}
-        }
     }
 
     function clearAnswerDraft(preferred) {
@@ -1236,7 +1239,7 @@
         lastSpeechText = '';
     }
 
-    function beginListening() {
+    function beginListening(fromUserGesture) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return false;
         freezeSpeechBaseline();
@@ -1249,23 +1252,39 @@
         isRecording = true;
         speechEngineOn = true;
 
+        if (recognition) {
+            if (fromUserGesture) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    const alreadyOn = /already started|InvalidStateError/i.test(String((e && e.message) || e));
+                    if (!alreadyOn) {
+                        try {
+                            recognition = bindSpeechHandlers(new SpeechRecognition());
+                            recognition.start();
+                        } catch (e2) {}
+                    }
+                }
+            }
+            showListeningUI();
+            return true;
+        }
+
+        if (!fromUserGesture) {
+            isRecording = false;
+            speechEngineOn = false;
+            markSpeechIdle('🎤 음성 녹음 시작을 눌러 주세요.');
+            return false;
+        }
+
         try {
-            if (!recognition) recognition = bindSpeechHandlers(new SpeechRecognition());
+            recognition = bindSpeechHandlers(new SpeechRecognition());
             recognition.start();
         } catch (e) {
-            if (isIOSDevice() && recognition) {
-                showListeningUI();
-                return true;
-            }
-            try {
-                recognition = bindSpeechHandlers(new SpeechRecognition());
-                recognition.start();
-            } catch (e2) {
-                isRecording = false;
-                speechEngineOn = false;
-                markSpeechIdle('한 번 더 눌러 주세요.');
-                return false;
-            }
+            isRecording = false;
+            speechEngineOn = false;
+            markSpeechIdle('한 번 더 눌러 주세요.');
+            return false;
         }
         showListeningUI();
         return true;
@@ -1288,6 +1307,7 @@
             if (recognition) {
                 try { recognition.stop(); } catch (e) {}
             }
+            recognition = null;
         }
         const input = document.getElementById('user-input');
         if (input) input.value = '';
@@ -1295,11 +1315,11 @@
         setSubmitEnabled(true);
     }
 
-    function restartMicForNewQuestion() {
+    function restartMicForNewQuestion(fromUserGesture) {
         resetSpeechSession(true);
         const home = document.getElementById('home-screen');
         if (home && !home.classList.contains('hidden')) return;
-        beginListening();
+        beginListening(!!fromUserGesture);
     }
 
     function scheduleMicRestart(delay) {
@@ -1307,7 +1327,7 @@
             if (isAnswerProcessing || isRecording) return;
             const home = document.getElementById('home-screen');
             if (home && !home.classList.contains('hidden')) return;
-            beginListening();
+            beginListening(false);
         }, delay || 400);
     }
 
@@ -1319,7 +1339,7 @@
             return;
         }
         if (isRecording) pauseListening();
-        else beginListening();
+        else beginListening(true);
     }
 
     function stopRecordUI() {
@@ -1555,10 +1575,8 @@
         currentStageWrongQueue = [];
         isRetryMode = false;
         retryAttemptCount = 0;
-        updateStageUI();
+        updateStageUI(true);
     }
-
-    function getCurrentQuestionList() {
         const stageObj = stages[currentStageIndex];
         if (isRetryMode) return currentStageWrongQueue;
         return stageObj.questions;
@@ -1591,7 +1609,7 @@
         document.getElementById('stage-score').innerText = `${stageScore}점`;
     }
 
-    function updateStageUI() {
+    function updateStageUI(fromUserGesture) {
         const stageObj = stages[currentStageIndex];
         const visualArea = document.getElementById('visual-area');
         visualArea.innerHTML = ''; 
@@ -1621,7 +1639,7 @@
         
         document.getElementById('user-input').value = '';
         document.getElementById('feedback-area').style.display = 'none';
-        restartMicForNewQuestion();
+        restartMicForNewQuestion(fromUserGesture);
         updateProgressUI();
     }
 
@@ -1895,7 +1913,7 @@
         currentStageWrongQueue = [];
         isRetryMode = false;
         retryAttemptCount = 0;
-        updateStageUI();
+        updateStageUI(true);
     }
 
     function triggerConfetti() {
