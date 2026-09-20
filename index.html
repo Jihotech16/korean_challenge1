@@ -1074,6 +1074,8 @@
     let speechEngineOn = false;
     let isAnswerProcessing = false;
     let submitWaitTries = 0;
+    let speechResultOffset = 0;
+    let lastResultCount = 0;
 
     function setSubmitEnabled(enabled) {
         const submitBtn = document.getElementById('submit-btn');
@@ -1139,13 +1141,18 @@
         rec.continuous = true;
         rec.interimResults = true;
         rec.onresult = function(event) {
-            if (recognition !== rec || !isRecording) return;
+            if (recognition !== rec) return;
+            lastResultCount = event.results.length;
+            if (!isRecording) return;
+            if (event.results.length < speechResultOffset) speechResultOffset = 0;
+            let finalPart = '';
             let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
+            for (let i = speechResultOffset; i < event.results.length; i++) {
                 const text = event.results[i][0].transcript || '';
-                if (event.results[i].isFinal) finalTranscript += text + ' ';
+                if (event.results[i].isFinal) finalPart += text + ' ';
                 else interimTranscript += text;
             }
+            finalTranscript = finalPart;
             applyHeardText(finalTranscript + interimTranscript);
         };
         rec.onend = function() {
@@ -1202,13 +1209,22 @@
         }
     }
 
+    function clearAnswerDraft() {
+        const input = document.getElementById('user-input');
+        if (input) input.value = '';
+        finalTranscript = '';
+        lastSpeechText = '';
+        speechResultOffset = lastResultCount;
+    }
+
     function beginListening() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return false;
+        speechResultOffset = lastResultCount;
+        finalTranscript = '';
+        lastSpeechText = '';
         const input = document.getElementById('user-input');
-        const currentVal = input ? input.value.trim() : '';
-        finalTranscript = currentVal ? currentVal + ' ' : '';
-        lastSpeechText = currentVal;
+        if (input) input.value = '';
         userRequestedStop = false;
         isSpeechFinalizing = false;
         isRecording = true;
@@ -1245,12 +1261,17 @@
         userRequestedStop = false;
         isSpeechFinalizing = false;
         isRecording = false;
+        speechResultOffset = lastResultCount;
         if (!keepEngine) {
             speechEngineOn = false;
+            lastResultCount = 0;
+            speechResultOffset = 0;
             if (recognition) {
                 try { recognition.stop(); } catch (e) {}
             }
         }
+        const input = document.getElementById('user-input');
+        if (input) input.value = '';
         setRecordReadyUI('대기 중');
         setSubmitEnabled(true);
     }
@@ -1624,6 +1645,7 @@
                 feedbackBox.style.borderColor = '#FECACA';
                 feedbackBox.innerHTML = `❌ <b>인사말을 확인해보세요!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 "안녕하세요? 만나서 반갑습니다."라고 인사해보세요.`;
                 isAnswerProcessing = false;
+                clearAnswerDraft();
                 scheduleMicRestart();
                 return;
             }
@@ -1652,8 +1674,7 @@
             feedbackBox.style.background = '#FEE2E2';
             feedbackBox.style.color = '#991B1B';
             feedbackBox.style.borderColor = '#FECACA';
-            document.getElementById('user-input').value = '';
-            finalTranscript = '';
+            clearAnswerDraft();
             feedbackBox.innerHTML = `❌ <b>대명사 오류!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 '저가'는 틀린 말이에요! <b>'제가'</b> 또는 <b>'저는'</b>을 사용해 주세요.`;
             isAnswerProcessing = false;
             scheduleMicRestart();
@@ -1672,9 +1693,7 @@
             feedbackBox.style.background = '#FEF3C7';
             feedbackBox.style.color = '#92400E';
             feedbackBox.style.borderColor = '#FDE68A';
-
-            document.getElementById('user-input').value = '';
-            finalTranscript = '';
+            clearAnswerDraft();
 
             if (!isRetryMode) {
                 // 일반 문제: 문제마다 최대 3번까지 연속으로 도전한다.
