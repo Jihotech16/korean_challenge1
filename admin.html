@@ -142,6 +142,16 @@
             font-weight: 700;
             color: #475569;
         }
+        .img-preview {
+            margin-top: 8px;
+            max-width: 240px;
+            max-height: 160px;
+            border-radius: 12px;
+            background: #fff;
+            object-fit: contain;
+            display: none;
+        }
+        .img-preview.show { display: block; }
         @media (max-width: 800px) {
             .wrap { grid-template-columns: 1fr; padding: 12px; }
         }
@@ -209,6 +219,8 @@
         'image_4eb4ef.jpg', 'image_4eb870.jpg', 'image_4eb8eb.jpg', 'image_4eb966.jpg',
         'image_4ebc53.jpg', 'image_4ebccb.jpg', 'image_5e96a4.png'
     ];
+    const extraImages = [];
+    const localImagePreview = {};
 
     let stages = [];
     let currentStage = 0;
@@ -347,6 +359,22 @@
         return text.split('\n').map(line => line.trim()).filter(Boolean);
     }
 
+    function allImageOptions() {
+        const names = new Set(IMAGE_OPTIONS.concat(extraImages));
+        stages.forEach(stage => {
+            (stage.questions || []).forEach(question => {
+                if (question.img) names.add(question.img);
+            });
+        });
+        return [''].concat([...names].filter(Boolean));
+    }
+
+    function getFunctionUrl(name) {
+        if (window.KOREAN_QUEST_PUBLISH_URL && name === 'publish') return window.KOREAN_QUEST_PUBLISH_URL;
+        if (location.hostname.endsWith('netlify.app')) return '/.netlify/functions/' + name;
+        return 'https://koreanclallenge.netlify.app/.netlify/functions/' + name;
+    }
+
     function escapeHtml(value) {
         return String(value || '').replace(/[&<>"']/g, ch => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -400,7 +428,10 @@
             <div class="help">학생이 반드시 말해야 하는 단어입니다. 한 줄에 하나씩 적으세요.<br>같은 뜻이면 <b>|</b> 로 나누면 됩니다. 예: <code>사요 | 사</code></div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
             <label>이미지</label>
-            <select id="q-img">${IMAGE_OPTIONS.map(img => `<option value="${img}" ${question.img === img ? 'selected' : ''}>${img || '(없음)'}</option>`).join('')}</select>
+            <div class="help">있는 그림을 고르거나, 아래 버튼으로 새 사진을 올리면 됩니다. png, jpg만 올리는 게 제일 안전합니다.</div>
+            <select id="q-img" onchange="updateImagePreview()">${allImageOptions().map(img => `<option value="${img}" ${question.img === img ? 'selected' : ''}>${img || '(없음)'}</option>`).join('')}</select>
+            <input type="file" id="q-img-file" accept="image/png,image/jpeg,image/gif,image/webp" onchange="uploadQuestionImage(this)">
+            <img class="img-preview${question.img ? ' show' : ''}" id="q-img-preview" alt="문제 이미지 미리보기" src="${question.img ? escapeHtml(localImagePreview[question.img] || question.img) : ''}">
             <details class="advanced">
                 <summary>더 자세한 설정 (필요할 때만)</summary>
                 <label>금지 표현 (한 줄에 하나)</label>
@@ -436,6 +467,82 @@
         const prompts = document.getElementById('q-prompts');
         if (!preview || !title || !prompts) return;
         preview.innerHTML = buildQuestionHtml(title.value, prompts.value);
+    }
+
+    function updateImagePreview() {
+        const select = document.getElementById('q-img');
+        const preview = document.getElementById('q-img-preview');
+        if (!select || !preview) return;
+        const name = select.value;
+        if (!name) {
+            preview.classList.remove('show');
+            preview.removeAttribute('src');
+            return;
+        }
+        preview.src = localImagePreview[name] || name;
+        preview.classList.add('show');
+    }
+
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function uploadQuestionImage(input) {
+        const file = input && input.files && input.files[0];
+        if (!file) return;
+        const password = sessionStorage.getItem('koreanQuestAdminPw') || '';
+        if (!password) {
+            setSaveStatus('다시 로그인해 주세요.');
+            return;
+        }
+        if (file.size > 1200000) {
+            setSaveStatus('이미지가 너무 큽니다. 1.2MB 이하로 줄여 주세요.');
+            input.value = '';
+            return;
+        }
+        setSaveStatus('이미지를 올리는 중...');
+        try {
+            const dataUrl = await fileToBase64(file);
+            const res = await fetch(getFunctionUrl('upload-image'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    password,
+                    filename: file.name,
+                    content: dataUrl
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setSaveStatus('이미지 업로드에 실패했습니다. ' + (data.error || res.statusText));
+                input.value = '';
+                return;
+            }
+            extraImages.push(data.filename);
+            localImagePreview[data.filename] = dataUrl;
+            saveQuestion(true);
+            const select = document.getElementById('q-img');
+            if (select) {
+                if (![...select.options].some(option => option.value === data.filename)) {
+                    const option = document.createElement('option');
+                    option.value = data.filename;
+                    option.textContent = data.filename;
+                    select.appendChild(option);
+                }
+                select.value = data.filename;
+            }
+            saveQuestion(true);
+            updateImagePreview();
+            setSaveStatus('이미지를 올렸습니다. 이 문제에 붙였으니 아래 저장 후 GitHub에 게시해 주세요. 그림은 1~2분 뒤 학생 화면에 보입니다.');
+        } catch (error) {
+            setSaveStatus('이미지를 올리지 못했습니다. 인터넷 연결을 확인해 주세요.');
+        }
+        input.value = '';
     }
 
     function saveStageMeta() {
@@ -555,12 +662,6 @@
         setSaveStatus('questions.json 파일을 내려받았습니다.');
     }
 
-    function getPublishUrl() {
-        if (window.KOREAN_QUEST_PUBLISH_URL) return window.KOREAN_QUEST_PUBLISH_URL;
-        if (location.hostname.endsWith('netlify.app')) return '/.netlify/functions/publish';
-        return 'https://koreanclallenge.netlify.app/.netlify/functions/publish';
-    }
-
     async function publishGitHub() {
         const password = sessionStorage.getItem('koreanQuestAdminPw') || '';
         if (!password) {
@@ -569,7 +670,7 @@
         }
         setSaveStatus('GitHub에 올리는 중...');
         try {
-            const res = await fetch(getPublishUrl(), {
+            const res = await fetch(getFunctionUrl('publish'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
