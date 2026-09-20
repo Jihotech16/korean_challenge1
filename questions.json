@@ -386,7 +386,7 @@
         ]
       },
       {
-        "q": "어늘 날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)",
+        "q": "오늘 날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)",
         "required": [
           "추워요",
           "추워"
