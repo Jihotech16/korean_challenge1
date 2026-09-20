@@ -1074,8 +1074,8 @@
     let speechEngineOn = false;
     let isAnswerProcessing = false;
     let submitWaitTries = 0;
-    let speechResultOffset = 0;
-    let lastResultCount = 0;
+    let lastFullTranscript = '';
+    let speechBaseline = '';
 
     function setSubmitEnabled(enabled) {
         const submitBtn = document.getElementById('submit-btn');
@@ -1136,24 +1136,49 @@
         setSubmitEnabled(true);
     }
 
+    function collectTranscript(event) {
+        let text = '';
+        for (let i = 0; i < event.results.length; i++) {
+            text += (event.results[i][0].transcript || '') + ' ';
+        }
+        return text.replace(/\s+/g, ' ').trim();
+    }
+
+    function textSinceBaseline(full) {
+        const cur = String(full || '').replace(/\s+/g, ' ').trim();
+        const base = String(speechBaseline || '').replace(/\s+/g, ' ').trim();
+        if (!cur) return '';
+        if (!base) return cur;
+        if (cur === base) return '';
+        if (cur.indexOf(base) === 0) return cur.slice(base.length).trim();
+        if (cur.length < Math.max(2, base.length * 0.5)) return cur;
+        let i = 0;
+        const n = Math.min(cur.length, base.length);
+        while (i < n && cur.charAt(i) === base.charAt(i)) i++;
+        if (i >= Math.min(6, base.length) || i >= base.length * 0.7) {
+            return cur.slice(i).trim();
+        }
+        return cur;
+    }
+
+    function freezeSpeechBaseline(preferred) {
+        const heard = String(preferred != null ? preferred : (heardText() || '')).replace(/\s+/g, ' ').trim();
+        const full = String(lastFullTranscript || '').replace(/\s+/g, ' ').trim();
+        speechBaseline = full.length >= heard.length ? (full || heard) : (heard || full);
+    }
+
     function bindSpeechHandlers(rec) {
         rec.lang = 'ko-KR';
         rec.continuous = true;
         rec.interimResults = true;
         rec.onresult = function(event) {
             if (recognition !== rec) return;
-            lastResultCount = event.results.length;
-            if (!isRecording) return;
-            if (event.results.length < speechResultOffset) speechResultOffset = 0;
-            let finalPart = '';
-            let interimTranscript = '';
-            for (let i = speechResultOffset; i < event.results.length; i++) {
-                const text = event.results[i][0].transcript || '';
-                if (event.results[i].isFinal) finalPart += text + ' ';
-                else interimTranscript += text;
+            lastFullTranscript = collectTranscript(event);
+            if (!isRecording) {
+                freezeSpeechBaseline();
+                return;
             }
-            finalTranscript = finalPart;
-            applyHeardText(finalTranscript + interimTranscript);
+            applyHeardText(textSinceBaseline(lastFullTranscript));
         };
         rec.onend = function() {
             if (recognition !== rec) return;
@@ -1163,20 +1188,13 @@
                     return;
                 } catch (e) {}
             }
-            const text = heardText();
+            if (isRecording && speechEngineOn) return;
             isRecording = false;
             isSpeechFinalizing = false;
             speechEngineOn = false;
             clearSpeechFinishTimer();
-            if (text) {
-                applyHeardText(text);
-                setRecordReadyUI('녹음 완료 · 정답 확인을 눌러주세요');
-            } else if (userRequestedStop) {
-                setRecordReadyUI('음성을 인식하지 못했어요. 다시 녹음해 주세요.');
-            } else {
-                setRecordReadyUI('대기 중');
-            }
             userRequestedStop = false;
+            setRecordReadyUI(heardText() ? '녹음 완료 · 정답 확인을 눌러주세요' : '대기 중');
             setSubmitEnabled(true);
         };
         rec.onerror = function(event) {
@@ -1193,6 +1211,7 @@
     }
 
     function pauseListening(statusText) {
+        freezeSpeechBaseline();
         isRecording = false;
         isSpeechFinalizing = false;
         userRequestedStop = false;
@@ -1209,18 +1228,18 @@
         }
     }
 
-    function clearAnswerDraft() {
+    function clearAnswerDraft(preferred) {
+        freezeSpeechBaseline(preferred);
         const input = document.getElementById('user-input');
         if (input) input.value = '';
         finalTranscript = '';
         lastSpeechText = '';
-        speechResultOffset = lastResultCount;
     }
 
     function beginListening() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return false;
-        speechResultOffset = lastResultCount;
+        freezeSpeechBaseline();
         finalTranscript = '';
         lastSpeechText = '';
         const input = document.getElementById('user-input');
@@ -1261,11 +1280,11 @@
         userRequestedStop = false;
         isSpeechFinalizing = false;
         isRecording = false;
-        speechResultOffset = lastResultCount;
+        freezeSpeechBaseline();
         if (!keepEngine) {
             speechEngineOn = false;
-            lastResultCount = 0;
-            speechResultOffset = 0;
+            lastFullTranscript = '';
+            speechBaseline = '';
             if (recognition) {
                 try { recognition.stop(); } catch (e) {}
             }
@@ -1634,6 +1653,7 @@
         }
 
         inputVal = inputVal.replace(/[?？?]/g, '').trim();
+        clearAnswerDraft(inputVal);
 
         if (currentStageIndex === 0 && isGreetingStep) {
             let greetingMatched = ["안녕하세요", "반갑습니다"].every(keyword => inputVal.includes(keyword));
