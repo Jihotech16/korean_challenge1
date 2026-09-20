@@ -450,6 +450,15 @@
                 예: <code>사요 | 사</code>
             </div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
+            <label>오답</label>
+            <div class="help">
+                학생이 <b>말하면 안 되는 말</b>입니다. 이 말이 들어가면 오답입니다.<br>
+                한 줄에 하나씩 적으세요. 비슷한 틀린 표현은 <b>|</b> 로 나누면 됩니다.<br>
+                예: <code>입니다</code><br>
+                예: <code>저가</code><br>
+                예: <code>사어요 | 사어</code>
+            </div>
+            <textarea id="q-forbidden">${escapeHtml(requiredToText(question.forbidden || []))}</textarea>
             <label>이미지</label>
             <div class="help">있는 그림을 고르거나, 아래 버튼으로 새 사진을 올리면 됩니다. png, jpg만 올리는 게 제일 안전합니다.</div>
             <select id="q-img" onchange="updateImagePreview()">${allImageOptions().map(img => `<option value="${img}" ${question.img === img ? 'selected' : ''}>${img || '(없음)'}</option>`).join('')}</select>
@@ -457,8 +466,6 @@
             <img class="img-preview${question.img ? ' show' : ''}" id="q-img-preview" alt="문제 이미지 미리보기" src="${question.img ? escapeHtml(localImagePreview[question.img] || question.img) : ''}">
             <details class="advanced">
                 <summary>더 자세한 설정 (필요할 때만)</summary>
-                <label>금지 표현 (한 줄에 하나)</label>
-                <textarea id="q-forbidden">${escapeHtml((question.forbidden || []).join('\n'))}</textarea>
                 <label>문제 유형</label>
                 <select id="q-type">
                     <option value="" ${!question.type ? 'selected' : ''}>(없음)</option>
@@ -596,7 +603,7 @@
             ),
             required: textToRequired(document.getElementById('q-required').value)
         };
-        const forbidden = textToList(document.getElementById('q-forbidden').value);
+        const forbidden = textToRequired(document.getElementById('q-forbidden').value);
         const img = document.getElementById('q-img').value;
         const type = document.getElementById('q-type').value;
         const qDemo = document.getElementById('q-demo').value.trim();

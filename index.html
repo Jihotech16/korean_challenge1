@@ -1236,6 +1236,24 @@
         }).join('');
     }
 
+    function escapeFeedback(value) {
+        return String(value || '').replace(/[&<>"']/g, function(ch) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
+    }
+
+    function findForbiddenMatch(inputVal, forbidden) {
+        for (let i = 0; i < (forbidden || []).length; i++) {
+            const item = forbidden[i];
+            const alts = Array.isArray(item) ? item : [item];
+            for (let j = 0; j < alts.length; j++) {
+                const word = String(alts[j] || '').trim();
+                if (word && inputVal.includes(word)) return word;
+            }
+        }
+        return '';
+    }
+
     function openStageSelect() {
         setStageSelectLevel(currentPlayLevel || 'beginner');
         document.getElementById('stage-select-modal').style.display = 'flex';
@@ -1480,8 +1498,14 @@
             customErrorMsg = `장소에 맞는 '${currentQ.particleType}' 조사를 사용해 주세요.`;
         }
 
-        if (currentQ.forbidden && currentQ.forbidden.some(f => inputVal.includes(f))) {
-            matched = false;
+        if (currentQ.forbidden && currentQ.forbidden.length) {
+            const forbiddenHit = findForbiddenMatch(inputVal, currentQ.forbidden);
+            if (forbiddenHit) {
+                matched = false;
+                if (!customErrorMsg) {
+                    customErrorMsg = `이 말은 쓰면 안 돼요. <b>'${escapeFeedback(forbiddenHit)}'</b> 말고 다른 말로 해보세요.`;
+                }
+            }
         }
 
         function matchesRequirement(requirement) {
@@ -1517,7 +1541,7 @@
                 retryAttemptCount++;
 
                 if (retryAttemptCount < 3) {
-                    feedbackBox.innerHTML = `🌱 <b>조금 아쉬워요!</b><br>한 번 더 생각해서 다시 말해보세요. (도전 ${retryAttemptCount}/3회)`;
+                    feedbackBox.innerHTML = `🌱 <b>조금 아쉬워요!</b><br>${customErrorMsg ? '💡 ' + customErrorMsg + '<br>' : ''}한 번 더 생각해서 다시 말해보세요. (도전 ${retryAttemptCount}/3회)`;
                     isAnswerProcessing = false;
                     return;
                 }
