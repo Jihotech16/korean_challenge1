@@ -506,13 +506,12 @@
             <div class="preview-box" id="q-preview">${buildQuestionHtml(parsed.title, parsed.prompts)}</div>
             <label>정답</label>
             <div class="help">
-                짧은 단어는 <b>한 줄에 하나씩</b> 적으면, 그 말이 모두 들어가야 정답입니다.<br>
+                예전과 같은 방식입니다. 새 문제를 추가해도 검사가 달라지지 않습니다.<br>
+                한 줄에 하나씩 적으면 <b>그 말이 모두</b> 들어가야 정답입니다.<br>
                 같은 뜻의 다른 표현은 같은 줄에서 <b>|</b> 로 나누세요.<br>
-                정답 문장 전체를 허용하려면 문장을 한 줄에 적으세요. 문장 여러 개는 <b>|</b> 로 나누면 됩니다.<br>
                 예: <code>네팔</code> 다음 줄 <code>학생</code><br>
-                예: <code>저는 네팔 학생이에요 | 전 네팔 학생이에요</code><br>
                 예: <code>사요 | 사</code><br>
-                기본으로 들어 있는 <b>정답</b>이라는 글자는 지우세요.
+                예: <code>저는 네팔 학생이에요 | 전 네팔 학생이에요</code>
             </div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
             <label>오답</label>
@@ -531,6 +530,7 @@
             <img class="img-preview${question.img ? ' show' : ''}" id="q-img-preview" alt="문제 이미지 미리보기" src="${question.img ? escapeHtml(localImagePreview[question.img] || question.img) : ''}">
             <details class="advanced">
                 <summary>더 자세한 설정 (필요할 때만)</summary>
+                <div class="help">여기 값을 넣으면 예전 문제와 같은 추가 검사가 새 문제에도 그대로 적용됩니다.</div>
                 <label>문제 유형</label>
                 <select id="q-type">
                     <option value="" ${!question.type ? 'selected' : ''}>(없음)</option>
