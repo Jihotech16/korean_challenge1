@@ -1044,7 +1044,6 @@
 
     function goHome() {
         resetPlayState(0);
-        updateStageUI();
         showHome();
     }
 
@@ -1186,12 +1185,16 @@
         return rec;
     }
 
-    function pauseListening() {
+    function pauseListening(statusText) {
         isRecording = false;
         isSpeechFinalizing = false;
         userRequestedStop = false;
-        const text = heardText();
-        setRecordReadyUI(text ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.');
+        if (statusText) {
+            setRecordReadyUI(statusText);
+        } else {
+            const text = heardText();
+            setRecordReadyUI(text ? '녹음 완료 · 정답 확인을 눌러주세요' : '음성을 인식하지 못했어요. 다시 녹음해 주세요.');
+        }
         setSubmitEnabled(true);
         if (!isIOSDevice() && recognition) {
             speechEngineOn = false;
@@ -1241,15 +1244,31 @@
         pendingStart = false;
         userRequestedStop = false;
         isSpeechFinalizing = false;
-        if (keepEngine && isIOSDevice() && speechEngineOn) {
-            isRecording = true;
-            showListeningUI();
-            return;
-        }
-        if (!keepEngine) speechEngineOn = false;
         isRecording = false;
+        if (!keepEngine) {
+            speechEngineOn = false;
+            if (recognition) {
+                try { recognition.stop(); } catch (e) {}
+            }
+        }
         setRecordReadyUI('대기 중');
         setSubmitEnabled(true);
+    }
+
+    function restartMicForNewQuestion() {
+        resetSpeechSession(true);
+        const home = document.getElementById('home-screen');
+        if (home && !home.classList.contains('hidden')) return;
+        beginListening();
+    }
+
+    function scheduleMicRestart(delay) {
+        setTimeout(function() {
+            if (isAnswerProcessing || isRecording) return;
+            const home = document.getElementById('home-screen');
+            if (home && !home.classList.contains('hidden')) return;
+            beginListening();
+        }, delay || 400);
     }
 
     function toggleRecord() {
@@ -1562,17 +1581,16 @@
         
         document.getElementById('user-input').value = '';
         document.getElementById('feedback-area').style.display = 'none';
-        resetSpeechSession(true);
+        restartMicForNewQuestion();
         updateProgressUI();
     }
 
     function submitAnswer() {
         if (isAnswerProcessing) return;
 
-        if (isIOSDevice() && isRecording) {
-            isRecording = false;
-        } else if ((isRecording && recognition) || isSpeechFinalizing) {
-            if (isRecording && recognition) stopRecordUI();
+        if (isRecording) {
+            pauseListening('대기 중');
+        } else if (isSpeechFinalizing) {
             submitWaitTries++;
             if (submitWaitTries < 12) {
                 const micStatus = document.getElementById('mic-status');
@@ -1590,6 +1608,7 @@
         if (!inputVal) {
             alert("답변을 말씀하시거나 텍스트로 입력해주세요!");
             isAnswerProcessing = false;
+            scheduleMicRestart(200);
             return;
         }
 
@@ -1605,6 +1624,7 @@
                 feedbackBox.style.borderColor = '#FECACA';
                 feedbackBox.innerHTML = `❌ <b>인사말을 확인해보세요!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 "안녕하세요? 만나서 반갑습니다."라고 인사해보세요.`;
                 isAnswerProcessing = false;
+                scheduleMicRestart();
                 return;
             }
 
@@ -1636,6 +1656,7 @@
             finalTranscript = '';
             feedbackBox.innerHTML = `❌ <b>대명사 오류!</b><br>💬 <b>입력 내용:</b> "${inputVal}"<br>💡 '저가'는 틀린 말이에요! <b>'제가'</b> 또는 <b>'저는'</b>을 사용해 주세요.`;
             isAnswerProcessing = false;
+            scheduleMicRestart();
             return;
         }
 
@@ -1664,6 +1685,7 @@
                 if (retryAttemptCount < 3) {
                     feedbackBox.innerHTML = `🌱 <b>조금 아쉬워요!</b><br>${customErrorMsg ? '💡 ' + customErrorMsg + '<br>' : ''}한 번 더 생각해서 다시 말해보세요. (도전 ${retryAttemptCount}/3회)`;
                     isAnswerProcessing = false;
+                    scheduleMicRestart();
                     return;
                 }
 
@@ -1685,6 +1707,7 @@
                 if (retryAttemptCount < 2) {
                     feedbackBox.innerHTML = `💪 <b>다시 한번 생각해볼까요? (재도전 ${retryAttemptCount}/2회)</b><br>💡 ${customErrorMsg || '핵심 키워드를 넣어서 다시 말해보세요!'}`;
                     isAnswerProcessing = false;
+                    scheduleMicRestart();
                     return;
                 } else {
                     let correctDesc = Array.isArray(currentQ.required[0]) ? (Array.isArray(currentQ.required[0][0]) ? currentQ.required[0][0].join(' ') : currentQ.required[0][0]) : currentQ.required[0];
