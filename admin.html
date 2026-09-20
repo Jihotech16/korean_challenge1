@@ -163,10 +163,8 @@
             <h2>저장</h2>
             <p class="help">
                 <b>이 기기 미리보기</b>는 선생님 휴대폰/컴퓨터에서만 바로 반영됩니다.<br>
-                학생들에게 보이게 하려면 <b>GitHub에 게시</b>하거나 JSON 파일을 받은 뒤 올려 주세요.
+                학생들에게 보이게 하려면 <b>GitHub에 게시</b>를 누르면 됩니다. 관리자 비밀번호만 있으면 됩니다.
             </p>
-            <label>GitHub 토큰 (게시할 때만 필요)</label>
-            <input id="github-token" type="password" placeholder="repo 권한이 있는 GitHub 토큰">
             <div class="row">
                 <button class="btn ok" onclick="saveLocal()">이 기기에서 미리보기 저장</button>
                 <button class="btn gray" onclick="clearLocal()">미리보기 지우기</button>
@@ -180,8 +178,6 @@
 
 <script>
     const ADMIN_PASSWORD = 'korean2026';
-    const GITHUB_OWNER = 'Jihotech16';
-    const GITHUB_REPO = 'korean_challenge1';
     const IMAGE_OPTIONS = [
         '', 'hint.png', 'success.png', 'classroom.jpg', 'building.jpg',
         'clock_class.png', 'clock_dinner.png', 'clock_apt.png',
@@ -201,11 +197,13 @@
             return;
         }
         sessionStorage.setItem('koreanQuestAdmin', '1');
+        sessionStorage.setItem('koreanQuestAdminPw', value);
         openApp();
     }
 
     function logout() {
         sessionStorage.removeItem('koreanQuestAdmin');
+        sessionStorage.removeItem('koreanQuestAdminPw');
         location.reload();
     }
 
@@ -467,41 +465,38 @@
         setSaveStatus('questions.json 파일을 내려받았습니다.');
     }
 
-    function toBase64(str) {
-        return btoa(unescape(encodeURIComponent(str)));
+    function getPublishUrl() {
+        if (window.KOREAN_QUEST_PUBLISH_URL) return window.KOREAN_QUEST_PUBLISH_URL;
+        if (location.hostname.endsWith('netlify.app')) return '/.netlify/functions/publish';
+        return 'https://lambent-ganache-359054.netlify.app/.netlify/functions/publish';
     }
 
     async function publishGitHub() {
-        const token = document.getElementById('github-token').value.trim();
-        if (!token) {
-            setSaveStatus('GitHub 토큰을 입력해 주세요. 없으면 JSON 내려받기로 파일을 바꿀 수 있습니다.');
+        const password = sessionStorage.getItem('koreanQuestAdminPw') || '';
+        if (!password) {
+            setSaveStatus('다시 로그인해 주세요.');
             return;
         }
         setSaveStatus('GitHub에 올리는 중...');
-        const api = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/questions.json`;
-        const headers = {
-            Authorization: 'Bearer ' + token,
-            Accept: 'application/vnd.github+json'
-        };
-        const existing = await fetch(api, { headers });
-        const existingJson = existing.ok ? await existing.json() : {};
-        const res = await fetch(api, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-                message: '관리자 페이지에서 문제를 수정함',
-                content: toBase64(currentJSON()),
-                sha: existingJson.sha,
-                branch: 'main'
-            })
-        });
-        if (!res.ok) {
-            const err = await res.text();
-            setSaveStatus('게시에 실패했습니다. 토큰 권한을 확인해 주세요. ' + err.slice(0, 180));
-            return;
+        try {
+            const res = await fetch(getPublishUrl(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    password,
+                    questions: JSON.parse(currentJSON())
+                })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setSaveStatus('게시에 실패했습니다. ' + (data.error || res.statusText));
+                return;
+            }
+            localStorage.removeItem('koreanQuestQuestions');
+            setSaveStatus('게시에 성공했습니다. 1~2분 뒤 학생 게임에 반영됩니다.');
+        } catch (error) {
+            setSaveStatus('게시에 실패했습니다. 인터넷 연결을 확인해 주세요.');
         }
-        localStorage.removeItem('koreanQuestQuestions');
-        setSaveStatus('게시에 성공했습니다. 1~2분 뒤 학생 게임에 반영됩니다.');
     }
 
     function setSaveStatus(message) {
