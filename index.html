@@ -1112,11 +1112,22 @@
         }
     }
 
+    function dropRecognition(rec) {
+        const target = rec || recognition;
+        if (!target) return;
+        if (recognition === target) recognition = null;
+        target.onstart = function() {};
+        target.onresult = function() {};
+        target.onerror = function() {};
+        target.onend = function() {};
+    }
+
     function finishSpeechSession(statusText) {
         clearSpeechFinishTimer();
         isRecording = false;
         isSpeechFinalizing = false;
         speechStartPending = false;
+        const rec = recognition;
         const text = applyHeardText(currentHeardText());
         if (statusText) {
             setRecordReadyUI(statusText);
@@ -1126,91 +1137,93 @@
             setRecordReadyUI('음성을 인식하지 못했어요. 다시 녹음해 주세요.');
         }
         setSubmitEnabled(true);
+        dropRecognition(rec);
     }
 
-    function ensureSpeechRecognition() {
-        if (recognition) return recognition;
+    function createSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return null;
-        try {
-            const rec = new SpeechRecognition();
-            rec.lang = 'ko-KR';
-            rec.continuous = true;
-            rec.interimResults = true;
-            rec.maxAlternatives = 1;
+        const rec = new SpeechRecognition();
+        rec.lang = 'ko-KR';
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
 
-            rec.onstart = function() {
-                speechStartPending = false;
-                isRecording = true;
+        rec.onstart = function() {
+            if (recognition !== rec) return;
+            speechStartPending = false;
+            isRecording = true;
+            ignoreSpeechEnd = false;
+            const btn = document.getElementById('record-btn');
+            const micStatus = document.getElementById('mic-status');
+            if (btn) {
+                btn.classList.add('recording');
+                btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
+            }
+            if (micStatus) micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
+        };
+
+        rec.onresult = function(event) {
+            if (recognition !== rec) return;
+            let finals = '';
+            let interimTranscript = '';
+            for (let i = 0; i < event.results.length; i++) {
+                const text = event.results[i][0].transcript || '';
+                if (event.results[i].isFinal) finals += text + ' ';
+                else interimTranscript += text;
+            }
+            applyHeardText(finalTranscript + finals + interimTranscript);
+        };
+
+        rec.onend = function() {
+            if (recognition !== rec) return;
+            if (ignoreSpeechEnd) {
                 ignoreSpeechEnd = false;
-                const btn = document.getElementById('record-btn');
-                const micStatus = document.getElementById('mic-status');
-                if (btn) {
-                    btn.classList.add('recording');
-                    btn.innerHTML = '⏹️ 녹음 완료 (멈추기)';
-                }
-                if (micStatus) micStatus.innerText = '🔴 듣는 중... (말씀하세요)';
-            };
+                isRecording = false;
+                isSpeechFinalizing = false;
+                speechStartPending = false;
+                dropRecognition(rec);
+                return;
+            }
+            if (speechStartPending) {
+                speechStartPending = false;
+                isRecording = false;
+                dropRecognition(rec);
+                setRecordReadyUI('마이크를 허용했다면 녹음 시작을 한 번 더 눌러 주세요.');
+                setSubmitEnabled(true);
+                return;
+            }
+            if (isRecording || isSpeechFinalizing) {
+                finishSpeechSession();
+            } else {
+                dropRecognition(rec);
+            }
+        };
 
-            rec.onresult = function(event) {
-                let finals = '';
-                let interimTranscript = '';
-                for (let i = 0; i < event.results.length; i++) {
-                    const text = event.results[i][0].transcript || '';
-                    if (event.results[i].isFinal) finals += text + ' ';
-                    else interimTranscript += text;
-                }
-                applyHeardText(finalTranscript + finals + interimTranscript);
-            };
+        rec.onerror = function(event) {
+            if (recognition !== rec) return;
+            const error = event && event.error;
+            if (error === 'aborted' || ignoreSpeechEnd) return;
+            if (error === 'no-speech') {
+                if (isSpeechFinalizing) finishSpeechSession();
+                return;
+            }
+            console.error('음성 인식 오류:', error);
+            if (error === 'not-allowed' || error === 'service-not-allowed') {
+                finishSpeechSession('마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.');
+                return;
+            }
+            if (isRecording || isSpeechFinalizing) {
+                finishSpeechSession(currentHeardText() ? '' : '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
+            }
+        };
 
-            rec.onend = function() {
-                if (ignoreSpeechEnd) {
-                    ignoreSpeechEnd = false;
-                    isRecording = false;
-                    isSpeechFinalizing = false;
-                    speechStartPending = false;
-                    return;
-                }
-                if (speechStartPending) {
-                    speechStartPending = false;
-                    isRecording = false;
-                    setRecordReadyUI('마이크를 허용했다면 녹음 시작을 한 번 더 눌러 주세요.');
-                    setSubmitEnabled(true);
-                    return;
-                }
-                if (isRecording || isSpeechFinalizing) {
-                    finishSpeechSession();
-                }
-            };
-
-            rec.onerror = function(event) {
-                const error = event && event.error;
-                if (error === 'aborted' || ignoreSpeechEnd) return;
-                if (error === 'no-speech') {
-                    if (isSpeechFinalizing) finishSpeechSession();
-                    return;
-                }
-                console.error('음성 인식 오류:', error);
-                if (error === 'not-allowed' || error === 'service-not-allowed') {
-                    finishSpeechSession('마이크 사용을 허용해 주세요. 허용이 되어 있지 않으면 직접 입력할 수 있어요.');
-                    return;
-                }
-                if (isRecording || isSpeechFinalizing) {
-                    finishSpeechSession(currentHeardText() ? '' : '음성 인식 오류가 발생했어요. 다시 녹음해 주세요.');
-                }
-            };
-
-            recognition = rec;
-            return rec;
-        } catch (e) {
-            console.error('음성 인식 초기화 실패:', e);
-            recognition = null;
-            return null;
-        }
+        return rec;
     }
 
     function resetSpeechSession() {
         clearSpeechFinishTimer();
+        const rec = recognition;
         const wasActive = isRecording || isSpeechFinalizing || speechStartPending;
         isRecording = false;
         isSpeechFinalizing = false;
@@ -1218,39 +1231,16 @@
         finalTranscript = '';
         lastSpeechText = '';
         submitWaitTries = 0;
-        if (wasActive && recognition) {
+        if (wasActive && rec) {
             ignoreSpeechEnd = true;
-            try { recognition.stop(); } catch (e) {}
+            try { rec.stop(); } catch (e) {}
+            dropRecognition(rec);
         } else {
             ignoreSpeechEnd = false;
+            dropRecognition(rec);
         }
         setRecordReadyUI('대기 중');
         setSubmitEnabled(true);
-    }
-
-    function startRecognition() {
-        const rec = ensureSpeechRecognition();
-        if (!rec) return false;
-        speechStartPending = true;
-        isSpeechFinalizing = false;
-        function tryStart() {
-            try {
-                rec.start();
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
-        if (tryStart()) return true;
-        setTimeout(function() {
-            speechStartPending = true;
-            if (!tryStart()) {
-                speechStartPending = false;
-                setRecordReadyUI('음성 인식을 시작할 수 없습니다. 다시 눌러 주세요.');
-                setSubmitEnabled(true);
-            }
-        }, 400);
-        return true;
     }
 
     function toggleRecord() {
@@ -1263,7 +1253,9 @@
         }
 
         if (!isRecording && !speechStartPending) {
-            if (!ensureSpeechRecognition()) {
+            dropRecognition(recognition);
+            recognition = createSpeechRecognition();
+            if (!recognition) {
                 if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 사용할 수 없습니다. 직접 입력해 주세요.';
                 return;
             }
@@ -1271,9 +1263,21 @@
             const currentVal = input ? input.value.trim() : '';
             finalTranscript = currentVal ? currentVal + ' ' : '';
             lastSpeechText = currentVal;
+            speechStartPending = true;
+            isSpeechFinalizing = false;
+            ignoreSpeechEnd = false;
             setSubmitEnabled(false);
             if (micStatus) micStatus.innerText = '마이크를 준비하고 있어요. 권한을 허용해 주세요.';
-            startRecognition();
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error('음성 인식 시작 실패:', e);
+                speechStartPending = false;
+                dropRecognition(recognition);
+                setRecordReadyUI('한 번 더 눌러 주세요.');
+                setSubmitEnabled(true);
+            }
         } else {
             stopRecordUI();
         }
