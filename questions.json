@@ -167,10 +167,13 @@
         "qDemo": "저것은"
       },
       {
-        "q": "선생님: '이것은 창문이에요?'<br>(제시어: <span class='target-word'>네, 창문</span>)",
+        "q": "선생님: &#39;이것은 창문이에요?&#39;<br>(제시어: <span class='target-word'>네, 창문</span>)",
         "required": [
           "네",
-          "이것은",
+          [
+            "이것은",
+            "그것은"
+          ],
           "창문"
         ],
         "type": "positive",
