@@ -1070,6 +1070,7 @@
     let finalTranscript = '';
     let lastSpeechText = '';
     let speechFinishTimer = null;
+    let ignoreSpeechEnd = false;
     let isAnswerProcessing = false;
     let submitWaitTries = 0;
 
@@ -1089,11 +1090,6 @@
             btn.innerHTML = '🎤 음성 녹음 시작';
         }
         if (micStatus) micStatus.innerText = statusText || '대기 중';
-    }
-
-    function isIOSDevice() {
-        const ua = navigator.userAgent || '';
-        return /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
     function applyHeardText(text) {
@@ -1116,16 +1112,6 @@
         }
     }
 
-    function detachRecognition() {
-        if (!recognition) return;
-        recognition.onstart = null;
-        recognition.onresult = null;
-        recognition.onerror = null;
-        recognition.onend = null;
-        try { recognition.abort(); } catch (e) {}
-        recognition = null;
-    }
-
     function finishSpeechSession(statusText) {
         clearSpeechFinishTimer();
         isRecording = false;
@@ -1142,19 +1128,21 @@
         setSubmitEnabled(true);
     }
 
-    function initSpeechRecognition() {
+    function ensureSpeechRecognition() {
+        if (recognition) return recognition;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return null;
         try {
             const rec = new SpeechRecognition();
             rec.lang = 'ko-KR';
-            rec.continuous = !isIOSDevice();
+            rec.continuous = true;
             rec.interimResults = true;
             rec.maxAlternatives = 1;
 
             rec.onstart = function() {
                 speechStartPending = false;
                 isRecording = true;
+                ignoreSpeechEnd = false;
                 const btn = document.getElementById('record-btn');
                 const micStatus = document.getElementById('mic-status');
                 if (btn) {
@@ -1176,6 +1164,13 @@
             };
 
             rec.onend = function() {
+                if (ignoreSpeechEnd) {
+                    ignoreSpeechEnd = false;
+                    isRecording = false;
+                    isSpeechFinalizing = false;
+                    speechStartPending = false;
+                    return;
+                }
                 if (speechStartPending) {
                     speechStartPending = false;
                     isRecording = false;
@@ -1190,7 +1185,7 @@
 
             rec.onerror = function(event) {
                 const error = event && event.error;
-                if (error === 'aborted') return;
+                if (error === 'aborted' || ignoreSpeechEnd) return;
                 if (error === 'no-speech') {
                     if (isSpeechFinalizing) finishSpeechSession();
                     return;
@@ -1205,24 +1200,57 @@
                 }
             };
 
+            recognition = rec;
             return rec;
         } catch (e) {
             console.error('음성 인식 초기화 실패:', e);
+            recognition = null;
             return null;
         }
     }
 
     function resetSpeechSession() {
         clearSpeechFinishTimer();
+        const wasActive = isRecording || isSpeechFinalizing || speechStartPending;
         isRecording = false;
         isSpeechFinalizing = false;
         speechStartPending = false;
         finalTranscript = '';
         lastSpeechText = '';
         submitWaitTries = 0;
-        detachRecognition();
+        if (wasActive && recognition) {
+            ignoreSpeechEnd = true;
+            try { recognition.stop(); } catch (e) {}
+        } else {
+            ignoreSpeechEnd = false;
+        }
         setRecordReadyUI('대기 중');
         setSubmitEnabled(true);
+    }
+
+    function startRecognition() {
+        const rec = ensureSpeechRecognition();
+        if (!rec) return false;
+        speechStartPending = true;
+        isSpeechFinalizing = false;
+        function tryStart() {
+            try {
+                rec.start();
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        if (tryStart()) return true;
+        setTimeout(function() {
+            speechStartPending = true;
+            if (!tryStart()) {
+                speechStartPending = false;
+                setRecordReadyUI('음성 인식을 시작할 수 없습니다. 다시 눌러 주세요.');
+                setSubmitEnabled(true);
+            }
+        }, 400);
+        return true;
     }
 
     function toggleRecord() {
@@ -1235,9 +1263,7 @@
         }
 
         if (!isRecording && !speechStartPending) {
-            detachRecognition();
-            recognition = initSpeechRecognition();
-            if (!recognition) {
+            if (!ensureSpeechRecognition()) {
                 if (micStatus) micStatus.innerText = '이 브라우저에서는 음성 인식을 사용할 수 없습니다. 직접 입력해 주세요.';
                 return;
             }
@@ -1245,20 +1271,9 @@
             const currentVal = input ? input.value.trim() : '';
             finalTranscript = currentVal ? currentVal + ' ' : '';
             lastSpeechText = currentVal;
-            speechStartPending = true;
-            isSpeechFinalizing = false;
             setSubmitEnabled(false);
             if (micStatus) micStatus.innerText = '마이크를 준비하고 있어요. 권한을 허용해 주세요.';
-
-            try {
-                recognition.start();
-            } catch (e) {
-                console.error('음성 인식 시작 실패:', e);
-                speechStartPending = false;
-                detachRecognition();
-                setRecordReadyUI('음성 인식을 다시 준비하고 있어요. 한 번 더 눌러 주세요.');
-                setSubmitEnabled(true);
-            }
+            startRecognition();
         } else {
             stopRecordUI();
         }
@@ -1269,6 +1284,7 @@
         isRecording = false;
         speechStartPending = false;
         isSpeechFinalizing = true;
+        ignoreSpeechEnd = false;
         setSubmitEnabled(false);
 
         const btn = document.getElementById('record-btn');
