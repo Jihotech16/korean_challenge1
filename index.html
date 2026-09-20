@@ -1317,14 +1317,53 @@
         return String((question && question.q) || '').replace(/<[^>]+>/g, ' ');
     }
 
+    function normalizeForMatch(text) {
+        let s = String(text || '');
+        const reps = [
+            [/12\s*시/g, '열두시'],
+            [/11\s*시/g, '열한시'],
+            [/10\s*분/g, '십분'],
+            [/10\s*시/g, '열시'],
+            [/9\s*시/g, '아홉시'],
+            [/8\s*시/g, '여덟시'],
+            [/7\s*시/g, '일곱시'],
+            [/6\s*시/g, '여섯시'],
+            [/5\s*시/g, '다섯시'],
+            [/4\s*시/g, '네시'],
+            [/3\s*시/g, '세시'],
+            [/2\s*시/g, '두시'],
+            [/1\s*시/g, '한시'],
+            [/열두\s*시/g, '열두시'],
+            [/열한\s*시/g, '열한시'],
+            [/아홉\s*시/g, '아홉시'],
+            [/여덟\s*시/g, '여덟시'],
+            [/일곱\s*시/g, '일곱시'],
+            [/여섯\s*시/g, '여섯시'],
+            [/다섯\s*시/g, '다섯시'],
+            [/십\s*분/g, '십분'],
+            [/한\s*시/g, '한시'],
+            [/두\s*시/g, '두시'],
+            [/세\s*시/g, '세시'],
+            [/네\s*시/g, '네시'],
+            [/열\s*시/g, '열시']
+        ];
+        reps.forEach(function(pair) { s = s.replace(pair[0], pair[1]); });
+        return s.replace(/\s+/g, '');
+    }
+
     function matchesRequirement(requirement, inputVal) {
+        const inputNorm = normalizeForMatch(inputVal);
         if (Array.isArray(requirement)) {
             if (requirement.some(function(item) { return Array.isArray(item); })) {
                 return requirement.every(function(item) { return matchesRequirement(item, inputVal); });
             }
-            return requirement.some(function(alt) { return inputVal.indexOf(alt) !== -1; });
+            return requirement.some(function(alt) {
+                const need = normalizeForMatch(alt);
+                return need && inputNorm.indexOf(need) !== -1;
+            });
         }
-        return inputVal.indexOf(requirement) !== -1;
+        const need = normalizeForMatch(requirement);
+        return !!(need && inputNorm.indexOf(need) !== -1);
     }
 
     function matchesRequiredList(inputVal, required) {
@@ -1333,12 +1372,14 @@
     }
 
     function findForbiddenMatch(inputVal, forbidden) {
+        const inputNorm = normalizeForMatch(inputVal);
         for (let i = 0; i < (forbidden || []).length; i++) {
             const item = forbidden[i];
             const alts = Array.isArray(item) ? item : [item];
             for (let j = 0; j < alts.length; j++) {
                 const word = String(alts[j] || '').trim();
-                if (word && inputVal.indexOf(word) !== -1) return word;
+                const need = normalizeForMatch(word);
+                if (need && inputNorm.indexOf(need) !== -1) return word;
             }
         }
         return '';
