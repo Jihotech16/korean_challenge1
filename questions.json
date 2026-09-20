@@ -2,40 +2,55 @@
   {
     "stage": "STAGE 1",
     "level": "beginner",
-    "grammarTitle": "자기소개 및 직업 (이에요/예요)",
-    "mascotSpeech": "자신을 자연스럽게 소개해보세요!",
-    "hint": "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 &#39;입니다&#39; 사용 금지)",
+    "grammarTitle": "국적 / 이름 / 직업을 말해요.",
+    "mascotSpeech": "자기 소개를 해요!",
+    "hint": "<b>[보기]</b> N은     N이에요/예요   (격식체 &quot;입니다&quot; 를 말하면 안 돼요.)",
     "questions": [
       {
-        "q": "자기소개<br>(제시어: <span class='target-word'>네팔, 학생</span>)",
+        "q": "어디에서 왔어요?  직업이 뭐예요?<br>(제시어: <span class='target-word'>네팔, 학생</span>)",
         "required": [
           "네팔",
           "학생"
         ]
       },
       {
-        "q": "자기소개<br>(제시어: <span class='target-word'>베트남, 회사원</span>)",
+        "q": "어느 나라 사람이에요? 직업이 뭐예요?<br>(제시어: <span class='target-word'>베트남, 회사원</span>)",
         "required": [
           "베트남",
           "회사원"
         ]
       },
       {
-        "q": "자기소개<br>(제시어: <span class='target-word'>미국, 대학생</span>)",
+        "q": "어느 나라 사람이에요? 직업이 뭐예요?<br>(제시어: <span class='target-word'>미국, 대학생</span>)",
         "required": [
           "미국",
           "대학생"
         ]
       },
       {
-        "q": "자기소개<br>(제시어: <span class='target-word'>일본, 경찰</span>)",
+        "q": "어느 나라 사람이에요?  이름이 뭐예요?<br>(제시어: <span class='target-word'>사람, 제 이름</span>)",
         "required": [
-          "일본",
-          "경찰"
+          [
+            "저는",
+            "나는"
+          ],
+          "사람이에요",
+          [
+            "제 이름은",
+            "내 이름은"
+          ],
+          [
+            "받침 없는 N예요",
+            "받침 있는 N이에요"
+          ]
+        ],
+        "forbidden": [
+          "받침이 있는 N 뒤에 '는'",
+          "받침이 없는 N 뒤에 '은'"
         ]
       },
       {
-        "q": "자기소개<br>(제시어: <span class='target-word'>우즈베키스탄, 선생님</span>)",
+        "q": "어디에서 왔어요? 직업이 뭐예요?<br>(제시어: <span class='target-word'>우즈베키스탄, 선생님</span>)",
         "required": [
           "우즈베키스탄",
           "선생님"
@@ -46,51 +61,76 @@
   {
     "stage": "STAGE 2",
     "level": "beginner",
-    "grammarTitle": "긍정/부정 대답 및 지시사 (이/그/저)",
+    "grammarTitle": "이/그/저 물건 이름을 말해요.",
     "mascotSpeech": "선생님의 질문에 올바른 지시사를 써서 대답해봐요!",
-    "hint": "<b>[보기]</b> 네, 이것은/그것은 N이에요/예요 또는 아니요, 저것은/그것은 N이/가 아니에요",
+    "hint": "<b>[보기]</b> 네, 이것은/그것/저것은    N이에요/예요  |  아니요, 이것은/그것은/저것은  N이/가 아니에요",
     "questions": [
       {
-        "q": "선생님: '저것은 컴퓨터예요?'<br>(제시어: <span class='target-word'>아니요, 칠판</span>)",
+        "q": "선생님: &#39;저것은 컴퓨터예요?&#39;<br>(제시어: <span class='target-word'>아니요, 칠판</span>)",
         "required": [
           "아니요",
+          "컴퓨터가 아니에요",
           "저것은",
           "칠판"
+        ],
+        "forbidden": [
+          [
+            "이것은",
+            "그것은"
+          ]
         ],
         "type": "negative",
         "qDemo": "저것은"
       },
       {
-        "q": "선생님: '이것은 책상이에요?'<br>(제시어: <span class='target-word'>네, 책상</span>)",
+        "q": "선생님: &#39;이것은 뭐예요?&#39;<br>(제시어: <span class='target-word'>책상</span>)",
         "required": [
-          "네",
-          "책상"
+          [
+            "이것은",
+            "그것은"
+          ],
+          "책상이에요"
+        ],
+        "forbidden": [
+          "저것은"
         ],
         "type": "positive",
         "qDemo": "이것은"
       },
       {
-        "q": "선생님: '그것은 연필이에요?'<br>(제시어: <span class='target-word'>아니요, 볼펜</span>)",
+        "q": "선생님: &#39;그것은 연필이에요?&#39;<br>(제시어: <span class='target-word'>아니요, 볼펜</span>)",
         "required": [
           "아니요",
           "이것은",
           "볼펜"
         ],
+        "forbidden": [
+          [
+            "그것은",
+            "저것은"
+          ]
+        ],
         "type": "negative",
         "qDemo": "그것은"
       },
       {
-        "q": "선생님: '저것은 공책이에요?'<br>(제시어: <span class='target-word'>네, 공책</span>)",
+        "q": "선생님: &#39;저것은 공책이에요?&#39;<br>(제시어: <span class='target-word'>네, 공책</span>)",
         "required": [
           "네",
           "저것은",
           "공책"
         ],
+        "forbidden": [
+          [
+            "이것은",
+            "그것은"
+          ]
+        ],
         "type": "positive",
         "qDemo": "저것은"
       },
       {
-        "q": "선생님: '이것은 지우개예요?'<br>(제시어: <span class='target-word'>아니요, 필통</span>)",
+        "q": "선생님: &#39;이것은 지우개예요?&#39;<br>(제시어: <span class='target-word'>아니요, 필통</span>)",
         "required": [
           "아니요",
           [
@@ -99,25 +139,41 @@
           ],
           "필통"
         ],
+        "forbidden": [
+          "저것은"
+        ],
         "type": "negative",
         "qDemo": "이것은"
       },
       {
-        "q": "선생님: '그것은 가방이에요?'<br>(제시어: <span class='target-word'>네, 가방</span>)",
+        "q": "선생님: &#39;그것은 가방이에요?&#39;<br>(제시어: <span class='target-word'>네, 가방</span>)",
         "required": [
           "네",
           "이것은",
           "가방"
         ],
+        "forbidden": [
+          [
+            "그것은",
+            "저것은"
+          ]
+        ],
         "type": "positive",
         "qDemo": "그것은"
       },
       {
-        "q": "선생님: '저것은 시계예요?'<br>(제시어: <span class='target-word'>아니요, 달력</span>)",
+        "q": "선생님: &#39;저것은 시계예요?&#39;<br>(제시어: <span class='target-word'>아니요, 달력</span>)",
         "required": [
           "아니요",
+          "시계가 아니에요",
           "저것은",
           "달력"
+        ],
+        "forbidden": [
+          [
+            "이것은",
+            "그것은"
+          ]
         ],
         "type": "negative",
         "qDemo": "저것은"
@@ -137,123 +193,173 @@
   {
     "stage": "STAGE 3",
     "level": "beginner",
-    "grammarTitle": "일상 행동 표현 (-을/를 V-아요/어요)",
-    "mascotSpeech": "지금 무엇을 해요?",
-    "hint": "<b>[보기]</b> N을/를 V-아요/어요 (받침 O: 을 / 받침 X:를 - 받침 있는/없는 명사 골고루 혼합)",
+    "grammarTitle": "일상생활을 말해요",
+    "mascotSpeech": "지금 뭐 해요?",
+    "hint": "<b>[보기]</b> N을/를     V-아요/어요",
     "questions": [
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>한국어, 배우다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>한국어, 배우다</span>)",
         "required": [
           "한국어를",
-          "배워"
-        ]
-      },
-      {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>커피, 마시다</span>)",
-        "required": [
-          "커피를",
-          "마셔"
-        ]
-      },
-      {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)",
-        "required": [
-          "책",
+          "배워요"
+        ],
+        "forbidden": [
           [
-            "읽어",
-            "읽어요"
+            "한국어이",
+            "한국어가"
+          ],
+          [
+            "배우아요",
+            "배와요",
+            "배우어요"
           ]
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>커피, 마시다</span>)",
         "required": [
-          "음악을",
-          "들어"
+          "커피를",
+          "마셔요",
+          "저는 지금 커피를 마셔요"
+        ],
+        "forbidden": [
+          [
+            "커피가",
+            "커피이"
+          ],
+          [
+            "마시어요",
+            "마시아요",
+            "마시워요"
+          ]
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>사과, 사다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>책, 읽다</span>)",
+        "required": [
+          "책을",
+          [
+            "읽어",
+            "읽어요"
+          ]
+        ],
+        "forbidden": [
+          [
+            "책이",
+            "책가"
+          ],
+          "읽아요"
+        ]
+      },
+      {
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)",
+        "required": [
+          "음악을",
+          "들어요"
+        ],
+        "forbidden": [
+          [
+            "음악이",
+            "음악가"
+          ],
+          [
+            "듣어요",
+            "듣아요",
+            "들아요",
+            "듣워요"
+          ]
+        ]
+      },
+      {
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>사과, 사다</span>)",
         "required": [
           "사과를",
           "사"
         ],
         "forbidden": [
+          [
+            "사과가",
+            "사과이"
+          ],
           "사어요"
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>냉면, 먹다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>냉면, 먹다</span>)",
         "required": [
           "냉면을",
           "먹어"
+        ],
+        "forbidden": [
+          [
+            "냉면이",
+            "냉면가"
+          ],
+          "먹아"
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>영화, 보다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>영화, 보다</span>)",
         "required": [
           "영화를",
           "봐"
+        ],
+        "forbidden": [
+          [
+            "영화가",
+            "영화이"
+          ],
+          "보어요"
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>숙제, 하다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>숙제, 하다</span>)",
         "required": [
           "숙제를",
           "해"
+        ],
+        "forbidden": [
+          [
+            "숙제가",
+            "숙제이"
+          ],
+          [
+            "하어요",
+            "하요"
+          ]
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>축구, 하다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>축구, 하다</span>)",
         "required": [
           "축구를",
           "해"
+        ],
+        "forbidden": [
+          [
+            "축구가",
+            "축구이"
+          ],
+          [
+            "하어요",
+            "하여요"
+          ]
         ]
       },
       {
-        "q": "지금 무엇을 해요?<br>(제시어: <span class='target-word'>청소, 하다</span>)",
+        "q": "지금 뭐 해요?<br>(제시어: <span class='target-word'>청소, 하다</span>)",
         "required": [
           "청소를",
           "해"
-        ]
-      }
-    ]
-  },
-  {
-    "stage": "STAGE 3.5",
-    "level": "beginner",
-    "grammarTitle": "1~3단계 종합 복습 챌린지",
-    "mascotSpeech": "개연성을 가진 대화를 이어가며 종합 회화를 연습해봐요!",
-    "hint": "<b>[보기]</b> 자기소개 + 사물 부정/긍정 + 일상 행동 연결 회화",
-    "questions": [
-      {
-        "q": "자기소개를 해보세요.<br>(제시어: <span class='target-word'>미국 사람, 대학생</span>)",
-        "required": [
-          "미국",
-          "대학생"
-        ]
-      },
-      {
-        "q": "한국 생활을 말해보세요.<br>(제시어: <span class='target-word'>한국, 한국어 공부하다</span>)",
-        "required": [
-          "한국",
-          "공부해"
-        ]
-      },
-      {
-        "q": "선생님: '저것은 텔레비전이에요?'<br>(제시어: <span class='target-word'>아니요, 컴퓨터</span>)",
-        "required": [
-          "아니요",
-          "컴퓨터"
-        ]
-      },
-      {
-        "q": "선생님: '도서관에서 뭐해요?'<br>(제시어: <span class='target-word'>책, 빌리다</span>)",
-        "required": [
-          "책",
+        ],
+        "forbidden": [
           [
-            "빌려",
-            "빌려요"
+            "청소가",
+            "청소이"
+          ],
+          [
+            "하어요",
+            "하요"
           ]
         ]
       }
@@ -262,107 +368,199 @@
   {
     "stage": "STAGE 4",
     "level": "beginner",
-    "grammarTitle": "'ㅂ' 불규칙 및 형용사/동사",
-    "mascotSpeech": "상태(형용사)와 행동(동사)의 알맞은 조사를 써서 표현해봐요!",
-    "hint": "<b>[보기]</b> 형용사(가벼워요, 추워요)는 '이/가' 사용, 타동사(잡다➔잡아요)는 '을/를' 사용",
+    "grammarTitle": "형용사/동사를 사용해요    'ㅂ' 불규칙을 공부해요",
+    "mascotSpeech": "형용사와 동사가 뭐예요?",
+    "hint": "<b>[보기]</b> 형용사(A) &#39;이/가&#39;  ,  타동사(잡다➔잡아요)는 &#39;을/를&#39; 사용",
     "questions": [
       {
-        "q": "이 가방은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)",
+        "q": "그 가방이 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)",
         "required": [
-          "가벼워요",
+          "이 가방",
+          "가벼워요"
+        ],
+        "forbidden": [
           [
-            "가벼워",
-            "가볍"
+            "그 가방",
+            "저 가방"
+          ],
+          [
+            "가볍어요",
+            "가볍아요",
+            "가벼와요",
+            "가벼어요",
+            "가벼아요"
           ]
         ]
       },
       {
-        "q": "날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)",
+        "q": "어늘 날씨가 어때요?<br>(제시어: <span class='target-word'>춥다</span>)",
         "required": [
           "추워요",
+          "추워"
+        ],
+        "forbidden": [
           [
-            "추워",
-            "춥"
+            "춥아요",
+            "추버요",
+            "추바요",
+            "춥어요"
           ]
         ]
       },
       {
-        "q": "이 책은 어때요?<br>(제시어: <span class='target-word'>어렵다</span>)",
+        "q": "그 책은 어때요?<br>(제시어: <span class='target-word'>어렵다</span>)",
         "required": [
-          "어려워요",
+          "이 책",
           [
-            "어려워",
-            "어렵"
+            "어려워요",
+            "어려워"
+          ]
+        ],
+        "forbidden": [
+          [
+            "그 책",
+            "저 책"
+          ],
+          [
+            "어려바요",
+            "여려버요",
+            "어렵아요",
+            "어렵어요"
           ]
         ]
       },
       {
         "q": "한국 음식이 어때요?<br>(제시어: <span class='target-word'>맵다</span>)",
         "required": [
-          "매워요",
           [
-            "매워",
-            "맵"
+            "매워요",
+            "매워"
+          ]
+        ],
+        "forbidden": [
+          [
+            "맵어요",
+            "맵아요",
+            "매버요",
+            "매바요",
+            "매와요",
+            "매아요"
           ]
         ]
       },
       {
-        "q": "이 옷은 어때요?<br>(제시어: <span class='target-word'>예쁘다</span>)",
+        "q": "이 옷이 어때요?<br>(제시어: <span class='target-word'>예쁘다</span>)",
         "required": [
-          "예뻐요",
+          "그 옷",
           [
-            "예뻐",
-            "예쁘"
+            "예뻐요",
+            "예뻐"
+          ]
+        ],
+        "forbidden": [
+          [
+            "이 옷",
+            "저 옷"
+          ],
+          [
+            "예쁘어요",
+            "예쁘아요"
           ]
         ]
       },
       {
-        "q": "이 신발은 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)",
+        "q": "그 신발이 어때요?<br>(제시어: <span class='target-word'>가볍다</span>)",
         "required": [
-          "가벼워요",
+          "이",
           [
-            "가벼워",
-            "가볍"
+            "가벼워요",
+            "가벼워"
+          ]
+        ],
+        "forbidden": [
+          [
+            "그",
+            "저"
+          ],
+          [
+            "가볍어요",
+            "가벼와요",
+            "가벼아요",
+            "가볍아요"
           ]
         ]
       },
       {
         "q": "오늘 날씨가 어때요?<br>(제시어: <span class='target-word'>덥다</span>)",
         "required": [
-          "더워요",
           [
-            "더워",
-            "덥"
+            "더워요",
+            "더워"
+          ]
+        ],
+        "forbidden": [
+          [
+            "더버요",
+            "덥어",
+            "덥아",
+            "더바"
           ]
         ]
       },
       {
-        "q": "이 음식은 어때요?<br>(제시어: <span class='target-word'>맛있다</span>)",
+        "q": "이 음식이 어때요?<br>(제시어: <span class='target-word'>맛있다</span>)",
         "required": [
-          "맛있어요",
           [
+            "맛있어요",
             "맛있어",
-            "맛있"
+            "마싣써요",
+            "마딛써요"
+          ]
+        ],
+        "forbidden": [
+          [
+            "맛있아요",
+            "마싯아요",
+            "마시싸요"
           ]
         ]
       },
       {
-        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>문, 닫다</span>)",
+        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>창문, 닫다</span>)",
         "required": [
-          "문을",
+          "창문을",
           [
             "닫아요",
             "닫아"
           ]
+        ],
+        "forbidden": [
+          [
+            "닫어요",
+            "다더요"
+          ]
         ]
       },
       {
-        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>친구 손, 잡다</span>)",
+        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>친구 , 손. 잡다</span>)",
         "required": [
-          "친구 손을",
+          [
+            "손을",
+            "소늘"
+          ],
           [
             "잡아요",
-            "잡아"
+            "자바요"
+          ]
+        ],
+        "forbidden": [
+          [
+            "손이",
+            "손가"
+          ],
+          [
+            "자버요",
+            "잡어요"
           ]
         ]
       },
@@ -374,6 +572,16 @@
             "찍어요",
             "찍어"
           ]
+        ],
+        "forbidden": [
+          [
+            "사진이",
+            "사진가"
+          ],
+          [
+            "찍아요",
+            "찌가요"
+          ]
         ]
       },
       {
@@ -383,6 +591,16 @@
           [
             "먹어요",
             "먹어"
+          ]
+        ],
+        "forbidden": [
+          [
+            "밥이",
+            "밥가"
+          ],
+          [
+            "먹아요",
+            "머가요"
           ]
         ]
       },
@@ -394,6 +612,16 @@
             "마셔요",
             "마셔"
           ]
+        ],
+        "forbidden": [
+          [
+            "물이",
+            "물가"
+          ],
+          [
+            "마시아요",
+            "마샤요"
+          ]
         ]
       },
       {
@@ -404,6 +632,16 @@
             "읽어요",
             "읽어"
           ]
+        ],
+        "forbidden": [
+          [
+            "책이",
+            "책가"
+          ],
+          [
+            "읽아요",
+            "일가요"
+          ]
         ]
       },
       {
@@ -413,6 +651,13 @@
           [
             "공부해요",
             "공부해"
+          ],
+          "한국어 공부를 해요"
+        ],
+        "forbidden": [
+          [
+            "한국어가",
+            "한국어이"
           ]
         ]
       },
@@ -424,6 +669,13 @@
             "만나요",
             "만나"
           ]
+        ],
+        "forbidden": [
+          [
+            "친구가",
+            "친구이"
+          ],
+          "만너요"
         ]
       },
       {
@@ -433,6 +685,18 @@
           [
             "들어요",
             "들어"
+          ]
+        ],
+        "forbidden": [
+          [
+            "음악이",
+            "음악가"
+          ],
+          [
+            "듣아요",
+            "듣어요",
+            "드더요",
+            "들아요"
           ]
         ]
       },
@@ -444,6 +708,13 @@
             "봐요",
             "봐"
           ]
+        ],
+        "forbidden": [
+          [
+            "사진이",
+            "사진가"
+          ],
+          "보어요"
         ]
       },
       {
@@ -454,6 +725,27 @@
             "열어요",
             "열어"
           ]
+        ],
+        "forbidden": [
+          [
+            "문이",
+            "문가"
+          ],
+          [
+            "열아요",
+            "여라요"
+          ]
+        ]
+      },
+      {
+        "q": "한국어 공부가 재미있어요?<br>(제시어: <span class='target-word'>네</span>)",
+        "required": [
+          "정답",
+          "한국어 공부가",
+          "재미있어요"
+        ],
+        "forbidden": [
+          "한국어 공부이"
         ]
       }
     ]
@@ -461,132 +753,194 @@
   {
     "stage": "STAGE 5",
     "level": "beginner",
-    "grammarTitle": "장소 조사 (에 / 에서) 및 일상 묻고 답하기",
-    "mascotSpeech": "장소와 일상 활동을 정확한 조사로 표현해봐요!",
-    "hint": "<b>[보기]</b> 장소에(이동), 장소에서(행동)",
+    "grammarTitle": "장소와 행동을 이야기해요.",
+    "mascotSpeech": "어디에 가요?",
+    "hint": "<b>[보기]</b> 장소N에 + V,가요,오다,살다,다니다    장소N에서  V,오다, 살다, 하다",
     "questions": [
       {
-        "q": "책을 빌리러 어디에 가나요?<br>(제시어: <span class='target-word'>도서관, 가다</span>)",
+        "q": "어디에 가요?<br>(제시어: <span class='target-word'>서점, 가다</span>)",
         "required": [
-          "도서관",
-          "가"
+          "서점에",
+          "가요"
+        ],
+        "forbidden": [
+          "서점에서"
         ],
         "particleType": "에"
       },
       {
-        "q": "책을 사러 어디에 가나요?<br>(제시어: <span class='target-word'>서점, 가다</span>)",
+        "q": "어디에서 책을 빌려요?<br>(제시어: <span class='target-word'>도서관, 책, 빌리다</span>)",
         "required": [
-          "서점",
-          "가"
+          "도서관에서",
+          "책을 빌려요"
+        ],
+        "forbidden": [
+          "도서관에",
+          [
+            "책이",
+            "책가",
+            "책를"
+          ],
+          [
+            "빌리아요",
+            "빌리어요"
+          ]
         ],
         "particleType": "에"
       },
       {
-        "q": "점심을 먹으러 어디에 가나요?<br>(제시어: <span class='target-word'>식당, 가다</span>)",
+        "q": "어디에 살아요?<br>(제시어: <span class='target-word'>기숙사</span>)",
         "required": [
-          "식당",
-          "가"
+          [
+            "기숙사에",
+            "기숙사에서"
+          ]
         ],
         "particleType": "에"
       },
       {
-        "q": "<b>어디에서 공부를 해요?</b><br>(제시어: <span class='target-word'>교실, 공부하다</span>)",
+        "q": "어디에서 시험 공부를 해요?<br>(제시어: <span class='target-word'>학교 도서관, 시험 공부, 하다</span>)",
         "required": [
-          "교실",
+          "학교 도서관에서",
           [
             "공부해요",
             "공부를 해요",
             "공부해"
           ]
         ],
+        "forbidden": [
+          "학교 도서관에",
+          "공부을"
+        ],
         "particleType": "에서"
       },
       {
-        "q": "<b>어디에서 운동을 해요?</b><br>(제시어: <span class='target-word'>운동장, 운동하다</span>)",
+        "q": "어디에서 운동을 해요?<br>(제시어: <span class='target-word'>운동장, 운동하다</span>)",
         "required": [
-          "운동장",
+          "운동장에서",
           [
             "운동을 해요",
             "운동해요",
             "운동해"
           ]
         ],
+        "forbidden": [
+          "운동장에",
+          "운동를"
+        ],
         "particleType": "에서"
       },
       {
-        "q": "<b>옷을 어디에서 사요?</b><br>(제시어: <span class='target-word'>백화점, 사다</span>)",
+        "q": "옷을 어디에서 사요?<br>(제시어: <span class='target-word'>백화점, 사다</span>)",
         "required": [
-          "백화점",
+          "백화점에서",
           [
             "사요",
             "사"
           ]
         ],
-        "particleType": "에서"
-      },
-      {
-        "q": "<b>카페에서 무엇을 해요?</b><br>(제시어: <span class='target-word'>커피, 마시다</span>)",
-        "required": [
-          "커피",
+        "forbidden": [
+          "백화점에",
           [
-            "마셔요",
-            "마셔",
-            "마십니다"
+            "옷이",
+            "옷가",
+            "오를",
+            "온늘"
           ]
         ],
         "particleType": "에서"
       },
       {
-        "q": "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>영화관, 영화, 보다</span>)",
+        "q": "어디에 다녀요?<br>(제시어: <span class='target-word'>회사, 다니다</span>)",
         "required": [
-          "영화관",
-          "영화",
+          "회사에",
+          [
+            "다녀요",
+            "다녀"
+          ]
+        ],
+        "forbidden": [
+          "회사에서"
+        ],
+        "particleType": "에서"
+      },
+      {
+        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>영화관, 영화, 보다</span>)",
+        "required": [
+          "영화관에서",
+          "영화를",
           [
             "봐요",
-            "봐",
-            "봅니다"
+            "봐"
           ]
+        ],
+        "forbidden": [
+          "영화관에",
+          [
+            "영화을",
+            "영화이",
+            "영화가"
+          ],
+          "보어요"
         ],
         "particleType": "에서"
       },
       {
-        "q": "<b>지금 뭐해요?</b><br>(제시어: <span class='target-word'>집, 잠, 자다</span>)",
+        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>집, 잠, 자다</span>)",
         "required": [
-          "집",
+          "집에서",
           [
-            "잠",
-            "자다",
-            "자",
+            "잠을",
             "자요"
           ]
         ],
+        "forbidden": [
+          "집에",
+          [
+            "잠이",
+            "잠가",
+            "잠를"
+          ],
+          "자어요"
+        ],
         "particleType": "에서"
+      },
+      {
+        "q": "지금 어디에서 와요?<br>(제시어: <span class='target-word'>집, 와요</span>)",
+        "required": [
+          "정답",
+          "지금 집에서 와요",
+          "집에서 와요"
+        ],
+        "forbidden": [
+          "집에 와요",
+          [
+            "집에 가요",
+            "집에서 가요"
+          ]
+        ]
       }
     ]
   },
   {
     "stage": "STAGE 6",
     "level": "beginner",
-    "grammarTitle": "위치 표현 (N에 있어요)",
-    "mascotSpeech": "그림을 보고 사물이 어디에 있는지 위치어와 조사를 정확하게 말해봐요!",
-    "hint": "<b>[보기]</b> 이미지를 보고 위치어와 <b>에 있어요</b>를 쓰세요. (제시어 없음)",
+    "grammarTitle": "위치를 이야기해요.",
+    "mascotSpeech": "어디에 있어요?",
+    "hint": "<b>[보기]</b> N은/는   N에 있어요",
     "questions": [
       {
-        "q": "<b>책은 어디에 있어요?</b>",
+        "q": "책은 어디에 있어요?<br>(제시어: <span class='target-word'>책, 책상</span>)",
         "required": [
-          [
-            "책은",
-            "최근",
-            "책이"
-          ],
-          "책상",
-          "위",
-          "에"
+          "책상 위에"
+        ],
+        "forbidden": [
+          "위에서"
         ],
         "img": "classroom.jpg"
       },
       {
-        "q": "<b>에어컨은 어디에 있어요?</b>",
+        "q": "에어컨은 어디에 있어요?",
         "required": [
           "칠판",
           [
@@ -596,19 +950,25 @@
           ],
           "에"
         ],
+        "forbidden": [
+          "에서"
+        ],
         "img": "classroom.jpg"
       },
       {
-        "q": "<b>나무가 어디에 있어요?</b>",
+        "q": "나무는 어디에 있어요?",
         "required": [
           "창",
           "밖",
           "에"
         ],
+        "forbidden": [
+          "에서"
+        ],
         "img": "classroom.jpg"
       },
       {
-        "q": "<b>고양이가 어디에 있어요?</b>",
+        "q": "고양이가 어디에 있어요?",
         "required": [
           "의자",
           [
@@ -616,6 +976,9 @@
             "밑"
           ],
           "에"
+        ],
+        "forbidden": [
+          "에서"
         ],
         "img": "image_4eb870.jpg"
       },
@@ -666,34 +1029,36 @@
   {
     "stage": "STAGE 7",
     "level": "beginner",
-    "grammarTitle": "시계 읽기, 가격 묻기 및 종합 챌린지",
-    "mascotSpeech": "시계를 읽고, 가격과 위치, 생일을 자유롭게 대답해봐요!",
-    "hint": "<b>[보기]</b> 이미지의 시각과 상황을 보고 올바른 문장으로 대답하세요. (6월은 '유월', 10월은 '시월' 주의!)",
+    "grammarTitle": "날짜, 요일, 시간, 가격을 말해요.",
+    "mascotSpeech": "오늘이 며칠이에요?",
+    "hint": "<b>[보기]</b> 6월 &#39;유월&#39; ,  10월 &#39;시월&#39;",
     "questions": [
       {
-        "q": "<b>생일이 언제예요?</b>",
+        "q": "생일이 언제예요?<br>(제시어: <span class='target-word'>제 생일은</span>)",
         "required": [
           "월",
           "일"
         ],
+        "forbidden": [
+          "육 월",
+          "십 월"
+        ],
         "type": "birthday"
       },
       {
-        "q": "<b>한국어 수업은 몇 시부터 몇 시까지 해요?</b>",
+        "q": "한국어 수업은 언제 해요?<br>(제시어: <span class='target-word'>오전, 오후, 시, 분, 부터, 까지</span>)",
         "required": [
-          "아홉",
-          "시",
-          "십",
-          "분",
-          "한",
-          "시",
-          "부터",
-          "까지"
+          "오전 아홉 시 십 분부터 오후 한 시까지"
+        ],
+        "forbidden": [
+          "구 시",
+          "열 분",
+          "일 시"
         ],
         "img": "clock_class.png"
       },
       {
-        "q": "<b>저녁을 언제 먹어요?</b><br>(제시어: <span class='target-word'>오후, 저녁을 먹다</span>)",
+        "q": "저녁을 언제 먹어요?<br>(제시어: <span class='target-word'>오후, 저녁을 먹다</span>)",
         "required": [
           [
             "오후 7시에",
@@ -710,31 +1075,61 @@
             "밥을 먹"
           ]
         ],
+        "forbidden": [
+          "칠 시에",
+          "칠 시에서"
+        ],
         "img": "clock_dinner.png"
       },
       {
-        "q": "<b>오늘 저녁에 약속이 있어요?</b><br>(제시어: <span class='target-word'>오후, 친구, 만나다</span>)",
+        "q": "오늘 저녁에 약속이 있어요?<br>(제시어: <span class='target-word'>오후, 친구, 만나다</span>)",
         "required": [
           "오후",
-          "친구",
+          [
+            "여덟 시 반",
+            "여덟 시 삼십 분"
+          ],
+          "에",
+          [
+            "친구를",
+            "친구와"
+          ],
           "만나"
+        ],
+        "forbidden": [
+          "에서"
         ],
         "img": "clock_apt.png"
       },
       {
-        "q": "<b>냉면이 얼마예요?</b><br>(제시어: <span class='target-word'>냉면이, 단위 N, 예요/이에요</span>)",
+        "q": "냉면이 얼마예요?<br>(제시어: <span class='target-word'>냉면, 한 그릇</span>)",
         "required": [
+          "냉면이",
+          "한 그릇에",
           [
-            "만오천",
+            "만오천 원",
+            "만 오천 원",
             "15000"
           ],
-          "원"
+          "이에요"
+        ],
+        "forbidden": [
+          "냉면가",
+          [
+            "한 그릇에서",
+            "한 그릇이",
+            "한그릇가",
+            "한 그릇을",
+            "한 그릇를"
+          ]
         ],
         "img": "image_5e96a4.png"
       },
       {
-        "q": "<b>김밥이 한 줄에 얼마예요?</b><br>(제시어: <span class='target-word'>김밥이, 한 줄에, 예요/이에요</span>)",
+        "q": "김밥이 얼마예요?<br>(제시어: <span class='target-word'>김밥, 한 줄</span>)",
         "required": [
+          "김밥이",
+          "한 줄에",
           [
             "삼천오백",
             "삼천 오백",
@@ -742,10 +1137,23 @@
           ],
           "원"
         ],
+        "forbidden": [
+          [
+            "김밥가",
+            "김밥을",
+            "김밥를"
+          ],
+          [
+            "한 줄이",
+            "한 줄에서",
+            "한 줄을",
+            "한 줄를"
+          ]
+        ],
         "img": "image_5e96a4.png"
       },
       {
-        "q": "<b>라면과 떡볶이를 먹고 싶어요. 얼마예요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와/과, 원이에요</span>)",
+        "q": "라면과 떡볶이를 먹고 싶어요. 얼마예요?<br>(제시어: <span class='target-word'>(이)랑/하고/와/과</span>)",
         "required": [
           [
             "라면",
@@ -754,14 +1162,13 @@
           [
             "만원",
             "만 원",
-            "10000",
-            "일만"
+            "10000"
           ]
         ],
         "img": "image_5e96a4.png"
       },
       {
-        "q": "<b>병원은 어디에 있어요?</b>",
+        "q": "병원은 어디에 있어요?",
         "required": [
           [
             "이 층",
@@ -772,7 +1179,7 @@
         "img": "building.jpg"
       },
       {
-        "q": "<b>약국은 어디에 있어요?</b><br>(제시어: <span class='target-word'>1층, 편의점 옆</span>)",
+        "q": "약국은 어디에 있어요?<br>(제시어: <span class='target-word'>1층, 편의점 옆</span>)",
         "required": [
           [
             "일 층",
@@ -787,10 +1194,15 @@
         "img": "building.jpg"
       },
       {
-        "q": "<b>어디에 살아요?</b>",
+        "q": "어디에 살아요?<br>(제시어: <span class='target-word'>저는, 살다</span>)",
         "required": [
           [
-            "층"
+            "삼",
+            "3"
+          ],
+          [
+            "층에",
+            "층에서"
           ],
           [
             "살아",
@@ -804,38 +1216,38 @@
   {
     "stage": "STAGE 8",
     "level": "beginner",
-    "grammarTitle": "보너스 종합 챌린지",
-    "mascotSpeech": "보너스 챌린지 문제들을 풀어봐요!",
-    "hint": "<b>[보기]</b> 유학생 친구들의 다양한 일상 회화 표현",
+    "grammarTitle": "보너스 챌린지",
+    "mascotSpeech": "한국어 실력을 볼까요?",
+    "hint": "<b>[보기]</b> 일상 생활을  말해요.",
     "questions": [
       {
-        "q": "<b>이것은 누구의 열쇠예요?</b><br>(제시어: <span class='target-word'>무함마사이드</span>)",
+        "q": "이것은 무함마사이드의 열쇠예요?<br>(제시어: <span class='target-word'>네 / 아니요</span>)",
         "required": [
-          "무함마사이드",
-          "열쇠"
+          "네, 제 열쇠예요",
+          "아니요, 제 열쇠가 아니에요."
+        ],
+        "forbidden": [
+          "열쇠이"
         ]
       },
       {
-        "q": "<b>난딘체첵, 손을 어디에서 씻어요?</b><br>(제시어: <span class='target-word'>화장실</span>)",
+        "q": "난딘체첵, 손을 어디에서 씻어요?<br>(제시어: <span class='target-word'>화장실</span>)",
         "required": [
           "화장실",
           "씻어"
         ]
       },
       {
-        "q": "<b>누가 비케시예요?</b>",
+        "q": "누가 비케시의 형이에요?<br>(제시어: <span class='target-word'>이 사람, 형</span>)",
         "required": [
-          [
-            "제가 비켓이에요",
-            "제가 비케시예요"
-          ]
+          "이 사람이 제 형이에요."
         ],
         "forbidden": [
-          "저는"
+          "이 사람가"
         ]
       },
       {
-        "q": "<b>사미르, 김치가 맛있어요?</b>",
+        "q": "사미르, 김치가 맛있어요?",
         "required": [
           [
             "네, 김치가 맛있어요",
@@ -846,7 +1258,7 @@
         ]
       },
       {
-        "q": "<b>커머라, 누구랑 손을 잡아요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과) 함께, 소스티카</span>)",
+        "q": "커머라, 누구랑 쇼핑을 가요?<br>(제시어: <span class='target-word'>소스티카 (이)랑/하고/와(과)</span>)",
         "required": [
           "소스티카",
           [
@@ -859,12 +1271,13 @@
         ]
       },
       {
-        "q": "<b>융, 편의점에서 무엇을 사요?</b><br>(제시어: <span class='target-word'>(이)랑/하고/와(과), 콜라, 김밥</span>)",
+        "q": "융, 편의점에서 무엇을 사요?<br>(제시어: <span class='target-word'>(이)랑/하고/와(과), 콜라, 김밥</span>)",
         "required": [
           [
             "콜라",
             "김밥"
           ],
+          "을",
           [
             "사요",
             "사"
@@ -872,14 +1285,17 @@
         ]
       },
       {
-        "q": "<b>마디나 씨, 어디에 다녀요?</b><br>(제시어: <span class='target-word'>학교</span>)",
+        "q": "마디나 씨, 어디에 다녀요?<br>(제시어: <span class='target-word'>학교, 다니다</span>)",
         "required": [
-          "학교",
+          "학교에",
           "다녀"
+        ],
+        "forbidden": [
+          "학교에서"
         ]
       },
       {
-        "q": "<b>티웬, 누구랑 점심을 먹어요?</b><br>(제시어: <span class='target-word'>엘백, 로젼, 사와드</span>)",
+        "q": "티웬, 누구랑 점심을 먹어요?<br>(제시어: <span class='target-word'>엘백, 로젼, 사와드, 함께</span>)",
         "required": [
           [
             "엘백",
@@ -890,10 +1306,16 @@
             "점심",
             "먹"
           ]
+        ],
+        "forbidden": [
+          [
+            "점심이",
+            "점심가"
+          ]
         ]
       },
       {
-        "q": "<b>푹히엡은 누구와 같이 커피를 마셔요?</b><br>(제시어: <span class='target-word'>아인, 린</span>)",
+        "q": "푹히엡은 누구와 같이 커피를 마셔요?<br>(제시어: <span class='target-word'>아인, 린</span>)",
         "required": [
           [
             "아인",
@@ -906,7 +1328,7 @@
         ]
       },
       {
-        "q": "<b>힘살리, 필통 안에 지우개가 있어요?</b>",
+        "q": "힘살리, 필통 안에 지우개가 있어요?",
         "required": [
           [
             "네, 제 필통 안에 지우개가 있어요",
@@ -919,26 +1341,36 @@
         ]
       },
       {
-        "q": "<b>나키샤, 목요일에 학교에 가요?</b><br>(제시어: <span class='target-word'>네</span>)",
+        "q": "나키샤, 목요일에 학교에 가요?<br>(제시어: <span class='target-word'>네</span>)",
         "required": [
           "네",
-          "목요일",
-          "학교",
+          "목요일에",
+          "학교에",
           "가"
+        ],
+        "forbidden": [
+          "목요일에서",
+          "학교에서"
         ]
       },
       {
-        "q": "<b>라흐마툴로, 생일에 무엇을 해요?</b><br>(제시어: <span class='target-word'>친구들, (이)랑/하고/(와)과, 파티</span>)",
+        "q": "라흐마툴로, 생일에 무엇을 해요?<br>(제시어: <span class='target-word'>친구들, (이)랑/하고/(와)과, 파티</span>)",
         "required": [
           "친구",
-          "파티"
+          [
+            "파티를 해요",
+            "파티해요"
+          ]
         ]
       },
       {
-        "q": "<b>압둘라술벡, 심심할 때 무엇을 해요?</b><br>(제시어: <span class='target-word'>음악, 듣다</span>)",
+        "q": "압둘라술벡, 심심할 때 무엇을 해요?<br>(제시어: <span class='target-word'>음악, 듣다</span>)",
         "required": [
-          "음악",
-          "들어"
+          "저는 음악을 들어요"
+        ],
+        "forbidden": [
+          "제가",
+          "음악를"
         ]
       }
     ]
