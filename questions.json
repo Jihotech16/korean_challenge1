@@ -3,7 +3,7 @@
     "stage": "STAGE 1",
     "grammarTitle": "자기소개 및 직업 (이에요/예요)",
     "mascotSpeech": "자신을 자연스럽게 소개해보세요!",
-    "hint": "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 '입니다' 사용 금지)",
+    "hint": "<b>[보기]</b> N은 ~, 받침 O: 이에요 / 받침 X: 예요 (격식체 &#39;입니다&#39; 사용 금지)",
     "questions": [
       {
         "q": "자기소개<br>(제시어: <span class='target-word'>네팔, 학생</span>)",
