@@ -1577,6 +1577,8 @@
         retryAttemptCount = 0;
         updateStageUI(true);
     }
+
+    function getCurrentQuestionList() {
         const stageObj = stages[currentStageIndex];
         if (isRetryMode) return currentStageWrongQueue;
         return stageObj.questions;
