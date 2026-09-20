@@ -302,7 +302,7 @@
     }
 
     function blankQuestion() {
-        return { q: buildQuestionHtml('새 문제', '키워드'), required: ['키워드'] };
+        return { q: buildQuestionHtml('새 문제', '제시어'), required: ['정답'] };
     }
 
     function decodeHtml(value) {
@@ -440,8 +440,15 @@
             <input id="q-prompts" value="${escapeHtml(parsed.prompts)}" oninput="updateQuestionPreview()" placeholder="예: 네팔, 학생">
             <label>학생 화면 미리보기</label>
             <div class="preview-box" id="q-preview">${buildQuestionHtml(parsed.title, parsed.prompts)}</div>
-            <label>정답 키워드</label>
-            <div class="help">학생이 반드시 말해야 하는 단어입니다. 한 줄에 하나씩 적으세요.<br>같은 뜻이면 <b>|</b> 로 나누면 됩니다. 예: <code>사요 | 사</code></div>
+            <label>정답</label>
+            <div class="help">
+                짧은 단어만 넣어도 되고, <b>정답 문장 전체</b>를 넣어도 됩니다.<br>
+                학생이 그 말(또는 그 문장)을 포함해서 말하면 정답입니다.<br>
+                한 줄에 하나씩 적으세요. 같은 뜻의 다른 표현은 <b>|</b> 로 나누면 됩니다.<br>
+                예: <code>네팔</code><br>
+                예: <code>저는 네팔 학생이에요</code><br>
+                예: <code>사요 | 사</code>
+            </div>
             <textarea id="q-required">${escapeHtml(requiredToText(question.required))}</textarea>
             <label>이미지</label>
             <div class="help">있는 그림을 고르거나, 아래 버튼으로 새 사진을 올리면 됩니다. png, jpg만 올리는 게 제일 안전합니다.</div>
