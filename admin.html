@@ -56,8 +56,29 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
         .top a { color: white; text-decoration: none; }
+        .admin-level-tabs {
+            display: flex;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+        }
+        .admin-level-tab {
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
+        .admin-level-tab.active {
+            background: white;
+            color: #4338CA;
+        }
         .wrap {
             display: grid;
             grid-template-columns: 280px 1fr;
@@ -174,6 +195,11 @@
 <div class="app" id="app">
     <div class="top">
         <div class="brand">문제 관리자</div>
+        <div class="admin-level-tabs">
+            <button class="admin-level-tab active" id="admin-tab-beginner" onclick="setAdminLevel('beginner')">🌱 초급</button>
+            <button class="admin-level-tab" id="admin-tab-intermediate" onclick="setAdminLevel('intermediate')">🌿 중급</button>
+            <button class="admin-level-tab" id="admin-tab-advanced" onclick="setAdminLevel('advanced')">🌳 고급</button>
+        </div>
         <div>
             <a href="index.html">게임으로</a>
             &nbsp;|&nbsp;
@@ -182,10 +208,10 @@
     </div>
     <div class="wrap">
         <div class="panel">
-            <h2>스테이지</h2>
+            <h2 id="stage-list-title">초급 스테이지</h2>
             <div id="stage-list"></div>
             <div class="row">
-                <button class="btn" onclick="addStage()">스테이지 추가</button>
+                <button class="btn" onclick="addStage()">이 난이도에 스테이지 추가</button>
             </div>
         </div>
         <div class="panel">
@@ -225,6 +251,7 @@
     let stages = [];
     let currentStage = 0;
     let currentQuestion = 0;
+    let currentAdminLevel = 'beginner';
 
     function login() {
         const value = document.getElementById('password').value;
@@ -264,6 +291,40 @@
         stages.forEach(function(stage) {
             if (!stage.level) stage.level = 'beginner';
         });
+        setAdminLevel(currentAdminLevel || 'beginner', true);
+    }
+
+    function stagesOfLevel(level) {
+        return stages.map(function(stage, index) {
+            return { stage: stage, index: index };
+        }).filter(function(item) {
+            return stageLevelOf(item.stage) === level;
+        });
+    }
+
+    function stageLevelOf(stage) {
+        const value = stage && stage.level;
+        if (value === '중급' || value === 'intermediate') return 'intermediate';
+        if (value === '고급' || value === 'advanced') return 'advanced';
+        return 'beginner';
+    }
+
+    function setAdminLevel(level, keepIndex) {
+        saveStageMeta(true);
+        saveQuestion(true);
+        currentAdminLevel = level;
+        ['beginner', 'intermediate', 'advanced'].forEach(function(id) {
+            const tab = document.getElementById('admin-tab-' + id);
+            if (tab) tab.classList.toggle('active', id === level);
+        });
+        const title = document.getElementById('stage-list-title');
+        if (title) title.innerText = levelLabel(level) + ' 스테이지';
+        const list = stagesOfLevel(level);
+        if (!keepIndex || stageLevelOf(stages[currentStage] || {}) !== level) {
+            currentStage = list.length ? list[0].index : -1;
+            currentQuestion = 0;
+        }
+        renderAll();
     }
 
     function renderAll() {
@@ -273,12 +334,19 @@
 
     function renderStageList() {
         const list = document.getElementById('stage-list');
-        list.innerHTML = stages.map((stage, index) => `
-            <button class="stage-item ${index === currentStage ? 'active' : ''}" onclick="selectStage(${index})">
-                <b>${escapeHtml(stage.stage || ('STAGE ' + (index + 1)))}</b><br>
-                <span class="muted">${escapeHtml(levelLabel(stage.level))} · ${escapeHtml(stage.grammarTitle || '')} · 문제 ${stage.questions.length}개</span>
+        const filtered = stagesOfLevel(currentAdminLevel);
+        if (!filtered.length) {
+            list.innerHTML = '<p class="muted">이 난이도 스테이지가 아직 없습니다. 아래에서 추가해 주세요.</p>';
+            return;
+        }
+        list.innerHTML = filtered.map(function(item) {
+            return `
+            <button class="stage-item ${item.index === currentStage ? 'active' : ''}" onclick="selectStage(${item.index})">
+                <b>${escapeHtml(item.stage.stage || ('STAGE ' + (item.index + 1)))}</b><br>
+                <span class="muted">${escapeHtml(item.stage.grammarTitle || '')} · 문제 ${item.stage.questions.length}개</span>
             </button>
-        `).join('');
+        `;
+        }).join('');
     }
 
     function selectStage(index) {
@@ -288,9 +356,10 @@
     }
 
     function addStage() {
+        const count = stagesOfLevel(currentAdminLevel).length;
         stages.push({
-            stage: 'STAGE ' + (stages.length + 1),
-            level: 'beginner',
+            stage: levelLabel(currentAdminLevel) + ' ' + (count + 1),
+            level: currentAdminLevel,
             grammarTitle: '새 문법',
             mascotSpeech: '새 스테이지를 시작해봐요!',
             hint: buildHint('힌트를 적어 주세요.'),
@@ -393,8 +462,9 @@
 
     function renderEditor() {
         const stage = stages[currentStage];
-        if (!stage) {
-            document.getElementById('stage-editor').innerHTML = '<p>스테이지가 없습니다.</p>';
+        if (!stage || stageLevelOf(stage) !== currentAdminLevel) {
+            document.getElementById('editor-title').innerText = levelLabel(currentAdminLevel) + ' 편집';
+            document.getElementById('stage-editor').innerHTML = '<p class="muted">이 난이도에 스테이지가 없습니다. 왼쪽에서 스테이지를 추가해 주세요.</p>';
             return;
         }
         if (currentQuestion >= stage.questions.length) currentQuestion = 0;
@@ -404,12 +474,6 @@
         document.getElementById('stage-editor').innerHTML = `
             <label>스테이지 이름</label>
             <input id="stage-name" value="${escapeHtml(stage.stage)}">
-            <label>난이도</label>
-            <select id="stage-level">
-                <option value="beginner" ${stage.level === 'beginner' ? 'selected' : ''}>초급</option>
-                <option value="intermediate" ${stage.level === 'intermediate' ? 'selected' : ''}>중급</option>
-                <option value="advanced" ${stage.level === 'advanced' ? 'selected' : ''}>고급</option>
-            </select>
             <label>문법 제목</label>
             <input id="stage-title" value="${escapeHtml(stage.grammarTitle)}">
             <label>마스코트 말</label>
@@ -575,15 +639,19 @@
         input.value = '';
     }
 
-    function saveStageMeta() {
+    function saveStageMeta(silent) {
         const stage = stages[currentStage];
-        stage.stage = document.getElementById('stage-name').value.trim();
-        stage.level = document.getElementById('stage-level').value || 'beginner';
+        const nameEl = document.getElementById('stage-name');
+        if (!stage || !nameEl) return;
+        stage.stage = nameEl.value.trim();
+        stage.level = currentAdminLevel;
         stage.grammarTitle = document.getElementById('stage-title').value.trim();
         stage.mascotSpeech = document.getElementById('stage-speech').value.trim();
         stage.hint = buildHint(document.getElementById('stage-hint').value);
-        renderAll();
-        setSaveStatus('스테이지 정보를 반영했습니다. 아래 저장 버튼으로 남겨 주세요.');
+        if (!silent) {
+            renderAll();
+            setSaveStatus('스테이지 정보를 반영했습니다. 아래 저장 버튼으로 남겨 주세요.');
+        }
     }
 
     function selectQuestion(index) {
@@ -596,6 +664,7 @@
     function saveQuestion(silent) {
         const stage = stages[currentStage];
         if (!stage || !stage.questions[currentQuestion]) return;
+        if (!document.getElementById('q-title')) return;
         const question = {
             q: buildQuestionHtml(
                 document.getElementById('q-title').value,
@@ -621,6 +690,7 @@
     }
 
     function addQuestion() {
+        if (currentStage < 0) return;
         saveQuestion(true);
         stages[currentStage].questions.push(blankQuestion());
         currentQuestion = stages[currentStage].questions.length - 1;
@@ -646,22 +716,28 @@
     }
 
     function moveStage(dir) {
-        saveStageMeta();
-        const next = currentStage + dir;
-        if (next < 0 || next >= stages.length) return;
-        [stages[currentStage], stages[next]] = [stages[next], stages[currentStage]];
-        currentStage = next;
+        saveStageMeta(true);
+        const list = stagesOfLevel(currentAdminLevel);
+        const pos = list.findIndex(function(item) { return item.index === currentStage; });
+        const nextPos = pos + dir;
+        if (pos < 0 || nextPos < 0 || nextPos >= list.length) return;
+        const from = list[pos].index;
+        const to = list[nextPos].index;
+        [stages[from], stages[to]] = [stages[to], stages[from]];
+        currentStage = to;
         renderAll();
     }
 
     function deleteStage() {
+        if (currentStage < 0) return;
         if (stages.length <= 1) {
             alert('스테이지는 최소 1개가 필요합니다.');
             return;
         }
         if (!confirm('이 스테이지를 삭제할까요?')) return;
         stages.splice(currentStage, 1);
-        currentStage = Math.max(0, currentStage - 1);
+        const remaining = stagesOfLevel(currentAdminLevel);
+        currentStage = remaining.length ? remaining[0].index : -1;
         currentQuestion = 0;
         renderAll();
     }
