@@ -1864,11 +1864,15 @@
       {
         "q": "&quot;이 꽃을 한국말로 뭐라고 해요?&quot;<br>(제시어: <span class='target-word'>한국말, 장미</span>)",
         "required": [
-          "한국말로 장미라고 해요."
+          "한국말로",
+          [
+            "장미라고",
+            "장미예요"
+          ]
         ]
       },
       {
-        "q": "&quot;서울에서 부산까지 몇 시간이 걸려요?&quot;<br>(제시어: <span class='target-word'>에서, 까지, KTX, 로, 가다, 2시간 15분 정도</span>)",
+        "q": "&quot;서울에서 부산까지 몇 시간이 걸려요?&quot;<br>(제시어: <span class='target-word'>에서, 까지, KTX, 로, 2시간 15분 정도</span>)",
         "required": [
           "서울에서 부산까지",
           [
