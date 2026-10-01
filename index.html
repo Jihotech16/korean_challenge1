@@ -153,9 +153,8 @@
 
         #visual-area:empty { display: none; }
         #visual-area:not(:empty) {
-            flex: 1 1 0;
-            min-height: 0;
-            display: flex;
+            flex: 0 0 auto;
+            width: 100%;
         }
 
         .hint-box {
@@ -187,14 +186,12 @@
             font-weight: bold;
         }
 
-        /* 문제 사진은 칸에 맞춰 줄어들되, 위아래가 잘리지 않게 */
+        /* 문제 사진은 가로를 채우고 비율을 유지한다. 위아래는 자르지 않는다. */
         .visual-container {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            height: 100%;
-            min-height: 0;
             margin: 0;
             background: #F8FAFC;
             border-radius: 16px;
@@ -207,10 +204,9 @@
 
         .visual-container img {
             display: block;
-            width: auto;
+            width: 100%;
             height: auto;
-            max-width: 100%;
-            max-height: 100%;
+            max-height: min(52vh, 420px);
             object-fit: contain;
             object-position: center;
             border-radius: 10px;
