@@ -835,14 +835,14 @@
       {
         "q": "어디에 다녀요?<br>(제시어: <span class='target-word'>회사, 다니다</span>)",
         "required": [
-          "회사에",
+          "에",
           [
             "다녀요",
             "다녀"
           ]
         ],
         "forbidden": [
-          "회사에서"
+          "에서"
         ],
         "particleType": "에서"
       },
