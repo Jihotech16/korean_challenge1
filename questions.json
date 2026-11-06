@@ -992,7 +992,7 @@
     "level": "beginner",
     "grammarTitle": "날짜, 요일, 시간, 가격을 말해요.",
     "mascotSpeech": "오늘이 며칠이에요?",
-    "hint": "<b>[보기]</b> 6월 &#39;유월&#39; ,  10월 &#39;시월&#39;",
+    "hint": "<b>[보기]</b> 6월은 “유월”이라고 말해요. <br>10월은 “시월”이라고 말해요.",
     "questions": [
       {
         "q": "생일이 언제예요?<br>(제시어: <span class='target-word'>제 생일은</span>)",
