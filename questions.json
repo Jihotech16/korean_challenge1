@@ -870,7 +870,10 @@
         "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>집, 잠, 자다</span>)",
         "required": [
           "에서",
-          "잠을 자요"
+          [
+            "잠을 자요",
+            "잠자요"
+          ]
         ],
         "forbidden": [
           [
