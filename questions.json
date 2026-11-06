@@ -792,10 +792,11 @@
         "particleType": "에"
       },
       {
-        "q": "어디에서 시험 공부를 해요?<br>(제시어: <span class='target-word'>학교 도서관, 시험 공부, 하다</span>)",
+        "q": "어디에서 시험 공부를 해요?<br>(제시어: <span class='target-word'>학교 도서관</span>)",
         "required": [
           "도서관에서",
           [
+            "해요",
             "공부해요",
             "공부를 해요",
             "공부해"
@@ -804,10 +805,12 @@
         "particleType": "에서"
       },
       {
-        "q": "어디에서 운동을 해요?<br>(제시어: <span class='target-word'>운동장, 운동하다</span>)",
+        "q": "어디에서 운동을 해요?<br>(제시어: <span class='target-word'>운동장</span>)",
         "required": [
           "에서",
           [
+            "해요",
+            "해",
             "운동을 해요",
             "운동해요",
             "운동해"
@@ -816,7 +819,7 @@
         "particleType": "에서"
       },
       {
-        "q": "옷을 어디에서 사요?<br>(제시어: <span class='target-word'>백화점, 사다</span>)",
+        "q": "옷을 어디에서 사요?<br>(제시어: <span class='target-word'>백화점</span>)",
         "required": [
           "에서",
           [
@@ -833,21 +836,10 @@
         "particleType": "에서"
       },
       {
-        "q": "어디에 다녀요?<br>(제시어: <span class='target-word'>학교, 한국어</span>)",
+        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>영화관, 영화</span>)",
         "required": [
           "에서",
-          "한국어"
-        ],
-        "forbidden": [
-          "에"
-        ],
-        "particleType": "에서"
-      },
-      {
-        "q": "지금 뭐해요?<br>(제시어: <span class='target-word'>영화관, 영화, 보다</span>)",
-        "required": [
-          "에서",
-          "영화를",
+          "를",
           [
             "봐요",
             "봐"
@@ -855,7 +847,6 @@
         ],
         "forbidden": [
           [
-            "영화을",
             "영화이",
             "영화가"
           ],
@@ -881,10 +872,13 @@
         "particleType": "에서"
       },
       {
-        "q": "지금 어디에서 와요?<br>(제시어: <span class='target-word'>집, 와요</span>)",
+        "q": "지금 어디에서 오는 거예요?<br>(제시어: <span class='target-word'>집</span>)",
         "required": [
           "에서",
-          "와요"
+          [
+            "와요",
+            "와"
+          ]
         ],
         "forbidden": [
           [
