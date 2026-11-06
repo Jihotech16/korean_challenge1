@@ -892,7 +892,7 @@
     "hint": "<b>[보기]</b> N은/는   N에 있어요",
     "questions": [
       {
-        "q": "책은 어디에 있어요?<br>(제시어: <span class='target-word'>책, 책상</span>)",
+        "q": "책은 어디에 있어요?<br>(제시어: <span class='target-word'>책상</span>)",
         "required": [
           "책상 위에"
         ],
