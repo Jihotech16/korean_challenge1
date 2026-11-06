@@ -833,7 +833,7 @@
         "particleType": "에서"
       },
       {
-        "q": "어디에 다녀요?<br>(제시어: <span class='target-word'>회사, 다니다</span>)",
+        "q": "어디에 다녀요?<br>(제시어: <span class='target-word'>학교, 다니다</span>)",
         "required": [
           "에",
           [
